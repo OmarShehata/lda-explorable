@@ -1,0 +1,14 @@
+* Create JS interface of 2D data, gets projected onto a 1D line, line can be rotated with mouse.
+* Put together a data set that is not separable on horizontal or vertical.
+* Load this dataset automatically into the graph including the headers.
+* Apply LDA to get this line of separation. 
+* Recreate JS interface with 3D to 2D instead. 
+* Come up with 3D Data for that.
+* Figure out how to use LDA to compute this? 
+* Come up with 4D data.
+	* Use LDA to find separation for 4D data. Hide some good structure in it
+* Figure out how to project 4D data down. 
+* Dynamic formula text with diagram. 
+* Put example on Colaboratory 
+
+Done:
