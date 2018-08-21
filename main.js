@@ -177,7 +177,7 @@ function make2DProjectionDiagram(canvas){
 					.easing(TWEEN.Easing.Quadratic.InOut)
 					.repeat(Infinity)
 					.yoyo(true)
-					//.start();
+					.start();
 			}
 			point.original = {x: point.translation.x, y: point.translation.y}
 			point.resetPosition = function(){
@@ -295,7 +295,7 @@ function make2DProjectionDiagram(canvas){
 document.addEventListener("DOMContentLoaded", function() {
 	let two = initTwojs('#projection-2d')
 
-	fetch("data/sample-2d.csv")
+	fetch("data/sample-simple-2d.csv")
     .then(res => res.blob())
     .then(res => {
     	Papa.parse(res, {
