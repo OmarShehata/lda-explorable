@@ -107,3 +107,7 @@ blockquote cite:before {
 #credit p {
 	font-size: 15px;
 }
+
+.figure {
+	width: 100%;
+}

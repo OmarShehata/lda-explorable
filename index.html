@@ -3,6 +3,10 @@
 <head>
 	<title>A Geometric Intuition for LDA</title>
 	<link rel = "stylesheet" type = "text/css" href = "style.css" />
+	<script src="lib/two.min.js"></script>
+    <script src="lib/Tween.js"></script>
+    <script src="lib/papaparse.min.js"></script>
+    <script src="main.js"></script>
 </head>
 <body>
 <div class="article">
@@ -28,6 +32,7 @@
 	<h2>The Problem</h2>
 	<p>High dimensional space is hard to work with, just computationally but also visually/intuitively. So we want to simplify it.</p>
 	<p>The problem is, how do you do that? We could just drop but then we're probably losing important information. Let's try a very simple case. Here you've got 2D data, and you want to reduce it 1 dimension.</p>
+	<div id="projection-2d" class="figure"></div>
 	<p><i>Side by side of blue and red dots, projected down so they're completely overlapping.</i></p>
 	<p>Under this projection, the 1 dimensional view contains less information than the higher dimensional view. We are essentially dropping the Y axis. Another way to think about it is if you just looked at the 1D view you'd think there was no pattern to the data, no way to predict a dot's color based on its weight. But this is not true and the pattern is obvious when you look at the higher dimensional view.</p>
 	<p>But maybe there's a better way to project data. We projected down onto a horizontal line, but there's an infinite number of them we can try! Click or drag to rotate the projection line.</p>
@@ -64,7 +69,7 @@
 	<p>Notice that both cases there actually have the same mean distances to each other, which is why it's not sufficient just to use that as a metric. </p>
 	<p>Now this isn't the only way to do it, and I encourage you to test out any different methods you came up with. That is the joy of maths. If you come up with something, publish it! </p>
 	<h2>Implementation Details</h2>
-	<p>Actually optimizing this is a matter of a little bit of calculus and a little bit of linear algebra. I won't go into the derivation here but (http://courses.cs.tamu.edu/rgutier/csce666_f13/l10.pdf) is a good resource.</p>
+	<p>Actually optimizing this is a matter of a little bit of calculus and a little bit of linear algebra. I won't go into the derivation here but (http://courses.cs.tamu.edu/rgutier/csce666_f13/l10.pdf) is a good resource. It does generalize to more than 2.</p>
 	<p>Most statistical packages will have an implementation. Let's see if using LDA will give us the same answer to what the best projection is for the 2D case that we found by hand.</p>
 	<p>In Python, you can do it like this</p>
 	<p><i>Python example with data hardcoded in.</i></p>
