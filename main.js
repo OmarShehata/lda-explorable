@@ -109,6 +109,9 @@ function project(point, basis){
 	}
 	// The projection formula (see https://www.cliffsnotes.com/study-guides/algebra/linear-algebra/real-euclidean-vector-spaces/projection-onto-a-subspace)
 	for(let V of basis){
+		// (-4, 2) for basis [1,0]
+		// (-4 * x + 2 * y)
+		// 
 		let proj = scaleVector(V,dot(point,V))
 		proj = scaleVector(proj, 1/dot(V,V))
 		projectedVector = addVectors(projectedVector, proj)
@@ -139,7 +142,7 @@ function make2DProjectionDiagram(canvas){
 	let xText = two.makeText("Size", 170, 240, style);
 	let yText = two.makeText("Age", 30, y, style);
 
-	let projectionBasis = [[1,0]]
+	let projectionBasis = [[1,0]]//[[0.623,-0.782]]
 	let points1D = [];
 	let points2D = [];
 
@@ -160,7 +163,10 @@ function make2DProjectionDiagram(canvas){
 		// Project 
 		let newData = []
 		for(let datum of data){
-			newData.push(project(datum,projectionBasis))	
+			let nDatum = project(datum,projectionBasis)
+			nDatum[1] = 0
+			nDatum[0] /= projectionBasis[0][0]
+			newData.push(nDatum)	
 		}
 		// Plot projection
 		points1D = plotPoints(two, {size:gridMeta.size,spacing:gridMeta.spacing,origin:{x:x+gridMeta.size/2,y:y}} , newData, classes)
@@ -168,7 +174,9 @@ function make2DProjectionDiagram(canvas){
 		// Tween points to their projected positions 
 		for(let i=0;i<points2D.length;i++){
 			let point = points2D[i]
-			let projected = {x: points1D[i].translation.x - xOffset, y: points1D[i].translation.y}
+			let nDatum = project(point.data, projectionBasis)
+			let newCoords = point.convertToWorldCoordinates(nDatum)
+			let projected = {x:newCoords[0], y: newCoords[1]}  //{x: points1D[i].translation.x - xOffset, y: points1D[i].translation.y}
 
 			point.setTween = function(target, initialDelay){
 				this.tween = new TWEEN.Tween(this.translation)
@@ -177,7 +185,7 @@ function make2DProjectionDiagram(canvas){
 					.easing(TWEEN.Easing.Quadratic.InOut)
 					.repeat(Infinity)
 					.yoyo(true)
-					.start();
+	 				.start();
 			}
 			point.original = {x: point.translation.x, y: point.translation.y}
 			point.resetPosition = function(){
@@ -204,6 +212,25 @@ function make2DProjectionDiagram(canvas){
 	// Projection line 
 	let projectionLine = two.makeLine(gridX-20, gridY - gridMeta.size/2, gridX + gridMeta.size + 20, gridY - gridMeta.size/2);
 	projectionLine.stroke = 'rgba(244, 185, 95, 1)'
+	projectionLine.updateAngle = function(vector, normalized){
+		let x = vector[0]
+		let y = vector[1]
+		if(!normalized){
+			let dx = x - gridMeta.origin.x;
+			let dy = y - gridMeta.origin.y; 
+			let dist = Math.sqrt(dx * dx + dy * dy);
+			dx /= dist; 
+			dy /= dist;
+			x = dx; 
+			y = dy;
+		} 
+		
+		projectionLine.vertices[0].set(x * 120, y * 120)
+		projectionLine.vertices[1].set(-x * 120, -y * 120)
+
+		return [x,y]
+	}
+	projectionLine.updateAngle(projectionBasis[0], true)
 	two.update();
 
 	projectionLine._renderer.elem.style['stroke-dasharray'] = 2
@@ -250,6 +277,29 @@ function make2DProjectionDiagram(canvas){
 	two.renderer.domElement.addEventListener('touchcancel', touchCancel)
 	two.renderer.domElement.addEventListener('mousemove', mouseMove)
 
+	function updateProjection(Vector, normalized){
+		let vector = projectionLine.updateAngle(Vector, normalized)
+
+		// Update projected points 
+		for(let i=0; i< points2D.length; i++){
+			let p = points2D[i]
+			// Cancel tween for each of points2D
+			p.resetPosition()
+			p.tween.stop()
+			// Re-project
+			projectionBasis = [vector]
+			let newProjection = project(p.data, projectionBasis)
+			let newCoords = points1D[i].convertToWorldCoordinates(newProjection)
+			// Create new tween
+			p.setTween({x: newCoords[0] - xOffset, y: newCoords[1] }) 
+			// Divide (x,y) by the basis (it must be a scalar multiple) to get the new (x,0) coordinate 
+			newProjection[0] = newProjection[0] / vector[0]
+			// update points1D
+			newCoords = points1D[i].convertToWorldCoordinates([newProjection[0],0])
+			points1D[i].translation.x = newCoords[0]
+		}
+	}
+
 	function update(time){
 		requestAnimationFrame(update);
 		TWEEN.update(time);
@@ -258,44 +308,23 @@ function make2DProjectionDiagram(canvas){
 		if(isTouching){
 			let newMouse = cPoint.getDOMCoordinates(mousePos.x, mousePos.y)
 
-			let dx = newMouse.x - gridMeta.origin.x;
-			let dy = newMouse.y - gridMeta.origin.y; 
-			let dist = Math.sqrt(dx * dx + dy * dy);
-			dx /= dist; 
-			dy /= dist;
-
-			// Update projected points 
-			for(let i=0; i< points2D.length; i++){
-				let p = points2D[i]
-				// Cancel tween for each of points2D
-				p.resetPosition()
-				p.tween.stop()
-				// Re-project
-				projectionBasis = [[dx, dy]]
-				let newProjection = project(p.data, projectionBasis)
-				let newCoords = points1D[i].convertToWorldCoordinates(newProjection)
-				// Create new tween
-				p.setTween({x: newCoords[0] - xOffset, y: newCoords[1] }) 
-				// Divide (x,y) by the basis (it must be a scalar multiple) to get the new (x,0) coordinate 
-				newProjection[0] = newProjection[0] / dx
-				// update points1D
-				newCoords = points1D[i].convertToWorldCoordinates([newProjection[0],0])
-				points1D[i].translation.x = newCoords[0]
-			}
-
-			projectionLine.vertices[0].set(dx * 120, dy * 120)
-			projectionLine.vertices[1].set(-dx * 120, -dy * 120)
+			updateProjection([newMouse.x, newMouse.y])
+			
 		}
 	}
 	requestAnimationFrame(update);
 
-	return {updateData:updateData, updateLabels: updateLabels};
+	function getProjectionBasis(){
+		return projectionBasis
+	}
+
+	return {updateData:updateData, updateLabels: updateLabels, updateProjection: updateProjection, getProjectionBasis: getProjectionBasis};
 }
 
 document.addEventListener("DOMContentLoaded", function() {
 	let two = initTwojs('#projection-2d')
 
-	fetch("data/sample-simple-2d.csv")
+	fetch("data/sample-2d.csv")
     .then(res => res.blob())
     .then(res => {
     	Papa.parse(res, {
@@ -321,6 +350,16 @@ document.addEventListener("DOMContentLoaded", function() {
 				}
 
 				diagram.updateData(data, classes);
+
+				let basis = diagram.getProjectionBasis()
+				let tween = new TWEEN.Tween({x:basis[0][0], y: basis[0][1]})
+					.to({x:0.62, y: -0.78}, 2000)
+					.delay(1000)
+					.easing(TWEEN.Easing.Quadratic.InOut)
+	 				.start()
+	 				.onUpdate(function(value){
+	 					diagram.updateProjection([value.x,value.y], true)
+	 				})
 			}
 		});
     })
