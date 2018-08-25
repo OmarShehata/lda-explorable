@@ -111,3 +111,8 @@ blockquote cite:before {
 .figure {
 	width: 100%;
 }
+
+.highlight {
+	border: 2px dotted #ff6262; 
+    border-radius: 15px;
+}

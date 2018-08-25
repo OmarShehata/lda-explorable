@@ -8,6 +8,7 @@ function initTwojs(id){
 	let elem = document.querySelector(id)
 	let params = { width: 640, height: 250 };
 	let two = new Two(params).appendTo(elem);
+
 	two.renderer.domElement.setAttribute("viewBox", "0 0 " + String(params.width) + " " + String(params.height));
     two.renderer.domElement.removeAttribute("width");
     two.renderer.domElement.removeAttribute("height");
@@ -270,12 +271,15 @@ function make2DProjectionDiagram(canvas){
 		mousePos.y = e.clientY;
 	}
 
-	two.renderer.domElement.addEventListener('mousedown', mouseDown)
-	two.renderer.domElement.addEventListener('mouseup', mouseUp)
-	two.renderer.domElement.addEventListener('touchstart', touchStart)
-	two.renderer.domElement.addEventListener('touchend', touchEnd)
-	two.renderer.domElement.addEventListener('touchcancel', touchCancel)
-	two.renderer.domElement.addEventListener('mousemove', mouseMove)
+	let element = two.renderer.domElement.parentNode;
+	element.addEventListener('mousedown', mouseDown)
+	element.addEventListener('mouseup', mouseUp)
+	element.addEventListener('touchstart', touchStart)
+	element.addEventListener('touchend', touchEnd)
+	element.addEventListener('touchcancel', touchCancel)
+	element.addEventListener('mousemove', mouseMove)
+
+	two.renderer.domElement.style['pointer-events'] = 'none';
 
 	function updateProjection(Vector, normalized){
 		let vector = projectionLine.updateAngle(Vector, normalized)
@@ -318,7 +322,34 @@ function make2DProjectionDiagram(canvas){
 		return projectionBasis
 	}
 
+
+
 	return {updateData:updateData, updateLabels: updateLabels, updateProjection: updateProjection, getProjectionBasis: getProjectionBasis};
+}
+
+function parse2DData(papaResults){
+	let results = papaResults
+
+	// Get headers 
+	let header = results.data.shift()
+	
+
+	let availableClasses = [RED, BLUE, ORANGE, GREEN, PURPLE]
+	let classDict = {}
+	let classes = []
+	let data = []
+	// Assume the first 2 are data, and the third is class
+	for(let datum of results.data){
+		let d_class = datum[2].trim()
+		if(classDict[d_class] == undefined){
+			classDict[d_class] = availableClasses.shift()
+		}
+		classes.push(classDict[d_class])
+		data.push(datum.slice(0,2))
+	}
+
+
+	return {header:header, data:data, classes: classes}
 }
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -330,26 +361,13 @@ document.addEventListener("DOMContentLoaded", function() {
     	Papa.parse(res, {
 			complete: function(results) {
 				let diagram = make2DProjectionDiagram(two);
+				window.diagram = diagram
 
-				// Get headers 
-				let header = results.data.shift()
+				let csvData = parse2DData(results)
+				let header = csvData.header 
+
 				diagram.updateLabels(header[0],header[1])
-
-				let availableClasses = [RED, BLUE, ORANGE, GREEN, PURPLE]
-				let classDict = {}
-				let classes = []
-				let data = []
-				// Assume the first 2 are data, and the third is class
-				for(let datum of results.data){
-					let d_class = datum[2].trim()
-					if(classDict[d_class] == undefined){
-						classDict[d_class] = availableClasses.shift()
-					}
-					classes.push(classDict[d_class])
-					data.push(datum.slice(0,2))
-				}
-
-				diagram.updateData(data, classes);
+				diagram.updateData(csvData.data, csvData.classes);
 
 				let basis = diagram.getProjectionBasis()
 				let tween = new TWEEN.Tween({x:basis[0][0], y: basis[0][1]})
@@ -358,10 +376,80 @@ document.addEventListener("DOMContentLoaded", function() {
 					.easing(TWEEN.Easing.Quadratic.InOut)
 	 				.start()
 	 				.onUpdate(function(value){
-	 					diagram.updateProjection([value.x,value.y], true)
+	 					let vector = [value.x,value.y]
+	 					let scale = 1/dot(vector,vector)
+	 					vector = scaleVector(vector,scale)
+	 					diagram.updateProjection(vector, true)
 	 				})
 			}
 		});
     })
 	
 });
+
+function dragOverHandler(ev) {
+	if(!ev.currentTarget.classList.contains('highlight')){
+		ev.currentTarget.classList.toggle('highlight')
+	}  
+
+ 	ev.preventDefault();
+}
+
+function dragLeaveHandler(ev) {
+	if(ev.currentTarget.classList.contains('highlight')){
+		ev.currentTarget.classList.toggle('highlight')
+	}  
+}
+
+function removeDragData(ev) {
+  if (ev.dataTransfer.items) {
+    // Use DataTransferItemList interface to remove the drag data
+    ev.dataTransfer.items.clear();
+  } else {
+    // Use DataTransfer interface to remove the drag data
+    ev.dataTransfer.clearData();
+  }
+}
+
+function processFile(file){
+	var reader = new FileReader();
+	reader.onload = function(e) { 
+	  var contents = e.target.result;
+	  Papa.parse(contents, {
+	  	complete: function(results){
+	  		let csvData = parse2DData(results)
+			let header = csvData.header 
+
+			let diagram = window.diagram
+			diagram.updateLabels(header[0],header[1])
+			diagram.updateData(csvData.data, csvData.classes);
+	  	}
+	  })
+	}
+	reader.readAsText(file);
+}
+
+function dropHandler(ev) {
+	//See https://developer.mozilla.org/en-US/docs/Web/API/HTML_Drag_and_Drop_API/File_drag_and_drop
+
+  // Prevent default behavior (Prevent file from being opened)
+  ev.preventDefault();
+
+  if (ev.dataTransfer.items) {
+    // Use DataTransferItemList interface to access the file(s)
+    for (var i = 0; i < ev.dataTransfer.items.length; i++) {
+      // If dropped items aren't files, reject them
+      if (ev.dataTransfer.items[i].kind === 'file') {
+        var file = ev.dataTransfer.items[i].getAsFile();
+        processFile(file)
+        break; // Only care about one file
+      }
+    }
+  } else {
+    // Use DataTransfer interface to access the file(s)
+    processFile(ev.dataTransfer.files[0])
+  } 
+  
+  removeDragData(ev)
+  dragLeaveHandler(ev)
+}
