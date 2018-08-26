@@ -366,6 +366,9 @@ document.addEventListener("DOMContentLoaded", function() {
 				let csvData = parse2DData(results)
 				let header = csvData.header 
 
+				let LDA = new LinearDiscriminantAnalysis();
+				LDA.fit(csvData.data, csvData.classes)
+
 				diagram.updateLabels(header[0],header[1])
 				diagram.updateData(csvData.data, csvData.classes);
 
