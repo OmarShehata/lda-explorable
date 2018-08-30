@@ -6,7 +6,7 @@
 * Figure out how to use LDA to compute this? 
 * Come up with 4D data.
 	* Use LDA to find separation for 4D data. Hide some good structure in it
-* Figure out how to project 4D data down. 
+
 * Dynamic formula text with diagram. 
 * Put example on Colaboratory 
 

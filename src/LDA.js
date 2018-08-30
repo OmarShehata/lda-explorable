@@ -89,18 +89,50 @@ class LinearDiscriminantAnalysis {
   	let Sb = numeric.sub(St,Sw);
 
   	// Compute eigenvectors 
-    let S = numeric.dot(numeric.inv(Sw),Sb);
+    // This is rather tricky because the right way to do it is eig(Sb, Sw)
+    // (https://github.com/scipy/scipy/blob/v1.1.0/scipy/linalg/decomp.py#L118-L267)
+    // but numeric doesn't support that! What this does is solve
+    // (Sb)x = Lambda (Sw) x 
+    // So instead, we bring (Sw) to the other side 
+    // (Sw)^-1 (Sb) x = Lambda x 
+    // But I think this only works if Sw has an inverse
+    let S = numeric.dot(numeric.inv(Sw),Sb); 
     let eigen = numeric.eig(S)
-    console.log(eigen)
+    let evecs = []
+    for(let i=0;i<eigen.E.x.length;i ++){
+      let v = eigen.E.x[i];
+      evecs.push({vector:v, value: eigen.lambda.x[i]})
+    }
+
   	// Sort eigenvectors by eigenvalues 
+    evecs.sort(function(a,b){ return a.value < b.value })
 
-  	//this.scalings = eigenvectors;
+  	this.scalings = [];
+
+    for(let v of evecs){
+      this.scalings.push(v.vector)
+    }
+
   }
 
-  fit_transform(Features, Classes){
-  	// Call fit 
-  	// 0 out columns after the first n_components
-  	// Multiply the features as a matrix by the scalings 
-  	// return the new projected features
+  getReducedScalings() {
+
+    let N = this.n_components;
+    if(N > this.scalings.length){
+      N = this.scalings.length
+    }
+
+    let reduced = []
+
+    for(let r=0;r<this.scalings.length;r++){
+      let newRow = []
+      for(let c=0;c<N;c++){
+        newRow.push(this.scalings[r][c])
+      }
+      reduced.push(newRow)
+    }
+
+    return reduced;
   }
+
 }

@@ -25,27 +25,30 @@
 	<!-- 
 	Sources: https://sebastianraschka.com/Articles/2014_python_lda.html#%E2%80%93-bit-by-bit
 	-->
-	<p>Linear Discriminant Analysis is a useful tool in machine learning for <b>classification</b> and <b>dimensionality reduction</b> (also used in facial recognition? https://link.springer.com/article/10.1007%2Fs10115-006-0013-y ).</p>
-	<p>The idea that you can take a 10 dimensional space and reduce it to 3 dimensions, while keeping most of the information intact, has always seemed a bit like magic to me. It's a mathematical technique that allows you to peer into spaces that cannot be seen. It allows you visualize, work with and analyze these confounding high dimensional spaces. It's like piercing the veil of the unknowable.</p>
-	<p>This article will explore this statistical technique with a focus on its geometric nature. No background in machine learning is needed. </p>
+	<p>Linear Discriminant Analysis is a useful technique in machine learning for <b>classification</b> and <b>dimensionality reduction</b> (also used in facial recognition? https://link.springer.com/article/10.1007%2Fs10115-006-0013-y ).</p>
+	<p>The idea that you can take a rich 10 dimensional space and reduce it to 3 dimensions, while keeping most of the information intact, has always seemed a bit like magic to me. It's often used as a preprocessing step since a lot of algorithms perform better on a smaller number of dimensions. And of course, visualizing and reasoning about a 3 dimensional space is mucher easier than a higher dimensional one.</p> 
+	<p>I like to think of Linear Discriminant Analysis as a mathematical tool that allows you to peer into spaces that cannot be seen. It's like piercing the veil of the unknowable.</p>
+	<p>This article will explore this statistical technique with a geometric approach. "Add geometry quote here". No background in machine learning is expected. </p>
 	<!-- 
 	- Add quote by William K CLifford abotu how geometric is the gate to science and so easy a child can go through it. 
 	-->
 	<hr>
 	<h2>The Problem</h2>
-	<p>High dimensional space is hard to work with, just computationally but also visually/intuitively. So we want to simplify it.</p>
-	<p>The problem is, how do you do that? We could just drop but then we're probably losing important information. Let's try a very simple case. Here you've got 2D data, and you want to reduce it 1 dimension.</p>
+	<p>You're given high dimensional data and you're trying to reduce it. This need not be anything esoteric. It could be data about houses on the market with price, age, size, distance to public transport and number of rooms. That's already 5 dimensions – too many to visualize all at once.</p>
+	<p>Like any good mathematician, we can start with a simple approach and explore its consequences. What happens if we just drop one of the dimensions?</p>
+	<p>Let's see how this would work in a simple case. Here is some made up data about houses that's only in 2 dimensions. Blue dots could be houses that were sold and red ones are still looking for a buyer.</p>
 	<div id="projection-2d" class="figure" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);"></div>
-	<p><i>Side by side of blue and red dots, projected down so they're completely overlapping.</i></p>
-	<p>Under this projection, the 1 dimensional view contains less information than the higher dimensional view. We are essentially dropping the Y axis. Another way to think about it is if you just looked at the 1D view you'd think there was no pattern to the data, no way to predict a dot's color based on its weight. But this is not true and the pattern is obvious when you look at the higher dimensional view.</p>
-	<p>But maybe there's a better way to project data. We projected down onto a horizontal line, but there's an infinite number of them we can try! Click or drag to rotate the projection line.</p>
-	<p><i>Side by side of same diagram.</i></p>
-	<p>Can you see how in some projections it's much easier to see the separation than in others? In fact, there is one particular angle, at [USE LDA TO FIND THIS, make it a link that sets the diagram and scrolls up to it] degrees that produces the best possible separation for this data. If we were to then apply some classification algorithm, it would preform just as well on the reduced data as on the original, so we can throw away the high dimensional data and just work with the low dimensional!</p>
+	<p>The graph on the left is the original data, and the line on the right is what it would look like after we reduce it 1 dimension.</p>
+	<p>This is certainly one way to reduce it, but remember that our goal is to reduce while keeping as much information as we can intact. You can easily tell when looking at the 2D view that there is a pattern  to the data. This information is completely lost in the 1D view.</p>
+	
+	<p>Can we do better? We dropped the Y axis above, so perhaps we could drop the X axis instead? You can see below that that's not much better. But notice that these aren't the only options. Geometrically, there are an infinite number of 1 dimensional lines that we could project down onto! Click and drag in the 2D graph below to rotate the projection line. </p> 
+	<div id="projection-2d-2" class="figure" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);"></div>
+	<p>Can you see how in some projections it's much easier to see the separation than in others? In fact, there is one particular angle, at <span id="best-2d-projection" class="projection-link">y = 0</span> degrees that produces the best possible separation for this data. If we were to then apply some classification algorithm, it would preform just as well on the reduced data as on the original, so we can throw away the high dimensional data and just work with the low dimensional!</p>
 	<p>The axis that remains is neither the original X nor the Y. It has no meaningful units on its own, but you can see it's not hard to reverse (example of this?).</p>
 	<h2>In 3D</h2>
 	<p>Let's try it with one more dimension up. Let's see if we can reduce 3D data to 2D. Use WS, AD, and QE to rotate.</p>
 	<p><i>Side by side diagram of 3D with rotating plane and 2D. Should already be rotating.</i></p>
-	<p>It's already much harder. There's 3 degrees of motion for a plane in 3D as opposed to 1 for a line in 2D. The optimal here is (FIND AND LINK). We need an algorithm so we can find the precise optimal, but also for situations where we can't even visualize the higher dimension. </p>
+	<p>It's already much harder. There's 3 degrees of motion for a plane in 3D as opposed to 1 for a line in 2D. The optimal here is FIND AND LINK. We need an algorithm so we can find the precise optimal, but also for situations where we can't even visualize the higher dimension. </p>
 	<p>Here is 4 dimensional data projected down to two. There are 6 degrees of motion. What we want is just like above, to find the projection that gives us the best separation in a lower dimension.</p>
 	<p><i>One 2D view, with 6 angles on top, of a rotating plane that projects 4D points into 2D.</i></p>
 	<p>This one is much harder to do intuitively by hand. When our intuition fails, we look to mathematics to guide us.</p>

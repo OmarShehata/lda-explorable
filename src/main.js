@@ -4,6 +4,8 @@ let ORANGE = 'rgba(244, 194, 66,1)';
 let GREEN = 'rgba(rgb(107, 244, 65,1)';
 let PURPLE = 'rgba(233, 88, 252,1)'
 
+let ProcessHandlers = {}
+
 function initTwojs(id){
 	let elem = document.querySelector(id)
 	let params = { width: 640, height: 250 };
@@ -140,7 +142,7 @@ function make2DProjectionDiagram(canvas){
 
 	// Label axes
 	let style = {weight:700, opacity: 0.7, size: 13}
-	let xText = two.makeText("Size", 170, 240, style);
+	let xText = two.makeText("Size", 190, 240, style);
 	let yText = two.makeText("Age", 30, y, style);
 
 	let projectionBasis = [[1,0]]//[[0.623,-0.782]]
@@ -322,9 +324,16 @@ function make2DProjectionDiagram(canvas){
 		return projectionBasis
 	}
 
+	function computeBestProjection(csvData){
+		let LDA = new LinearDiscriminantAnalysis();
+		LDA.fit(csvData.data, csvData.classes)
+		let scalings = LDA.getReducedScalings()
+		return {x:scalings[0][0], y:scalings[1][0]}
+	}
 
 
-	return {updateData:updateData, updateLabels: updateLabels, updateProjection: updateProjection, getProjectionBasis: getProjectionBasis};
+
+	return {computeBestProjection:computeBestProjection ,updateData:updateData, updateLabels: updateLabels, updateProjection: updateProjection, getProjectionBasis: getProjectionBasis};
 }
 
 function parse2DData(papaResults){
@@ -352,8 +361,8 @@ function parse2DData(papaResults){
 	return {header:header, data:data, classes: classes}
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-	let two = initTwojs('#projection-2d')
+function initDiagram2D(ID, resultSpanID, initialLine) {
+	let two = initTwojs('#'+ID)
 
 	fetch("data/sample-2d.csv")
     .then(res => res.blob())
@@ -361,34 +370,58 @@ document.addEventListener("DOMContentLoaded", function() {
     	Papa.parse(res, {
 			complete: function(results) {
 				let diagram = make2DProjectionDiagram(two);
-				window.diagram = diagram
 
-				let csvData = parse2DData(results)
-				let header = csvData.header 
+				ProcessHandlers[ID] = function(results) {
+					let csvData = parse2DData(results)
+					let header = csvData.header 
 
-				let LDA = new LinearDiscriminantAnalysis();
-				LDA.fit(csvData.data, csvData.classes)
+					diagram.updateLabels(header[0],header[1])
+					diagram.updateData(csvData.data, csvData.classes);
 
-				diagram.updateLabels(header[0],header[1])
-				diagram.updateData(csvData.data, csvData.classes);
+					let projectionLine = diagram.computeBestProjection(csvData)
+					if(resultSpanID) {
+						let span = document.querySelector("#" + resultSpanID)
+						span.innerHTML = `(${projectionLine.y.toFixed(2)})y = (${projectionLine.x.toFixed(2)})x`;
+						span.onclick = function() {
+						let basis = diagram.getProjectionBasis()
+						let timeForTween = 1000;
+						let targetY = document.querySelector("#" + ID).offsetTop - 30
+						if(Math.abs(window.scrollY - targetY) < 50){
+							timeForTween = 100;
+						}
+						let tween = new TWEEN.Tween({x: 0, y: window.scrollY})
+									.to({x:0, y: targetY}, timeForTween)
+									.easing(TWEEN.Easing.Quadratic.InOut)
+									.start()
+									.onUpdate(function(value){
+										window.scrollTo(value.x, value.y)
+									})
+						let tween2 = new TWEEN.Tween({x:basis[0][0], y: basis[0][1]})
+								.to(projectionLine, 2000)
+								.delay(250)
+								.easing(TWEEN.Easing.Quadratic.InOut)
+				 				.onUpdate(function(value){
+				 					let vector = [value.x,value.y]
+				 					let scale = 1/Math.sqrt(dot(vector,vector))
+				 					vector = scaleVector(vector,scale)
+				 					diagram.updateProjection(vector, true)
+				 				})
+				 		tween.chain(tween2);
+				 			
+						}
+					}
 
-				let basis = diagram.getProjectionBasis()
-				let tween = new TWEEN.Tween({x:basis[0][0], y: basis[0][1]})
-					.to({x:0.62, y: -0.78}, 2000)
-					.delay(1000)
-					.easing(TWEEN.Easing.Quadratic.InOut)
-	 				.start()
-	 				.onUpdate(function(value){
-	 					let vector = [value.x,value.y]
-	 					let scale = 1/dot(vector,vector)
-	 					vector = scaleVector(vector,scale)
-	 					diagram.updateProjection(vector, true)
-	 				})
+					if(initialLine) {
+	 					diagram.updateProjection([initialLine.x, initialLine.y], true)
+					}
+					
+					
+				}
+				ProcessHandlers[ID](results)
 			}
 		});
     })
-	
-});
+}	
 
 function dragOverHandler(ev) {
 	if(!ev.currentTarget.classList.contains('highlight')){
@@ -414,18 +447,14 @@ function removeDragData(ev) {
   }
 }
 
-function processFile(file){
+function processFile(file, currentTarget){
+
 	var reader = new FileReader();
 	reader.onload = function(e) { 
 	  var contents = e.target.result;
 	  Papa.parse(contents, {
 	  	complete: function(results){
-	  		let csvData = parse2DData(results)
-			let header = csvData.header 
-
-			let diagram = window.diagram
-			diagram.updateLabels(header[0],header[1])
-			diagram.updateData(csvData.data, csvData.classes);
+	  		ProcessHandlers[currentTarget.id](results)
 	  	}
 	  })
 	}
@@ -444,15 +473,20 @@ function dropHandler(ev) {
       // If dropped items aren't files, reject them
       if (ev.dataTransfer.items[i].kind === 'file') {
         var file = ev.dataTransfer.items[i].getAsFile();
-        processFile(file)
+        processFile(file, ev.currentTarget)
         break; // Only care about one file
       }
     }
   } else {
     // Use DataTransfer interface to access the file(s)
-    processFile(ev.dataTransfer.files[0])
+    processFile(ev.dataTransfer.files[0], ev.currentTarget)
   } 
   
   removeDragData(ev)
   dragLeaveHandler(ev)
 }
+
+document.addEventListener("DOMContentLoaded", function() {
+	initDiagram2D('projection-2d');
+	initDiagram2D('projection-2d-2', 'best-2d-projection', {x:-0.01,y:1});
+});

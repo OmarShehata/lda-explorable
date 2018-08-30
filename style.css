@@ -116,3 +116,13 @@ blockquote cite:before {
 	border: 2px dotted #ff6262; 
     border-radius: 15px;
 }
+
+.projection-link {
+	cursor:pointer;
+	color: #B2506A;	
+	text-decoration: underline;	
+}
+
+.projection-link:hover {
+	color: #E56788;	
+}
