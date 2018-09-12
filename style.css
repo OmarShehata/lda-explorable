@@ -120,9 +120,27 @@ blockquote cite:before {
 .projection-link {
 	cursor:pointer;
 	color: #B2506A;	
-	text-decoration: underline;	
-}
+/*	text-decoration: underline;	
+*/}
 
 .projection-link:hover {
 	color: #E56788;	
+}
+
+#container-3d {
+	width:100%;
+}
+
+#projection-3d {
+	float:left;
+	display:inline-block;
+	width: 50%;
+	height:100%;
+}
+
+#projection-3d-2d {
+	float:left;
+	display:inline-block;
+	width: 50%;
+	height:100%;	
 }

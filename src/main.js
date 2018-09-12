@@ -5,10 +5,14 @@ let GREEN = 'rgba(rgb(107, 244, 65,1)';
 let PURPLE = 'rgba(233, 88, 252,1)'
 
 let ProcessHandlers = {}
+let UpdateFunctions = []
 
-function initTwojs(id){
+function initTwojs(id, width, height){
+	width = width || 640;
+	height = height || 250; 
+
 	let elem = document.querySelector(id)
-	let params = { width: 640, height: 250 };
+	let params = { width: width, height: height };
 	let two = new Two(params).appendTo(elem);
 
 	two.renderer.domElement.setAttribute("viewBox", "0 0 " + String(params.width) + " " + String(params.height));
@@ -18,10 +22,10 @@ function initTwojs(id){
     return two;
 }
 
-function make2DAxes(x,y, canvas){
+function make2DAxes(x,y, canvas, size, lWidth){
 	let lineColor = "rgba(0, 0, 0, 1)";
-	let lineWidth = 2;
-	let gridSize = 200;
+	let lineWidth = lWidth || 2;
+	let gridSize = size || 200;
 	let origin = {x:x+gridSize/2,y:y-gridSize/2};
 
 	let line = canvas.makeLine(origin.x, y, x+ gridSize/2, y - gridSize);
@@ -33,7 +37,8 @@ function make2DAxes(x,y, canvas){
 	line.stroke = lineColor;
 
 	// Make grid 
-	let spacing = 20;
+	let spacing = Math.round(gridSize/10);
+
 	for(let X=x; X<=x+gridSize; X+=spacing){
 		// Vertical lines
 		line = canvas.makeLine(X, y, X, y - gridSize);
@@ -123,6 +128,15 @@ function project(point, basis){
 	return projectedVector;
 }
 
+function makeSimple2D(canvas) {
+	let two = canvas; 
+
+	let gridX = 35;
+	let gridY = 205;
+	let gridMeta = make2DAxes(gridX,gridY,two, 170, 1);
+
+}
+
 function make2DProjectionDiagram(canvas){
 	let two = canvas; 
 
@@ -181,14 +195,21 @@ function make2DProjectionDiagram(canvas){
 			let newCoords = point.convertToWorldCoordinates(nDatum)
 			let projected = {x:newCoords[0], y: newCoords[1]}  //{x: points1D[i].translation.x - xOffset, y: points1D[i].translation.y}
 
-			point.setTween = function(target, initialDelay){
+			point.setTween = function(target, animate){
 				this.tween = new TWEEN.Tween(this.translation)
 					.to(target, 700)
-					.delay(2000)
+					.delay(400)
 					.easing(TWEEN.Easing.Quadratic.InOut)
-					.repeat(Infinity)
-					.yoyo(true)
-	 				.start();
+				this.tween.chain(
+					new TWEEN.Tween(this.translation)
+						.to(this.original,700)
+						.delay(1000)
+						.easing(TWEEN.Easing.Quadratic.InOut)
+					)	
+				
+	 			if (animate) {
+	 				this.tween.start();
+	 			}
 			}
 			point.original = {x: point.translation.x, y: point.translation.y}
 			point.resetPosition = function(){
@@ -283,7 +304,7 @@ function make2DProjectionDiagram(canvas){
 
 	two.renderer.domElement.style['pointer-events'] = 'none';
 
-	function updateProjection(Vector, normalized){
+	function updateProjection(Vector, normalized, animate){
 		let vector = projectionLine.updateAngle(Vector, normalized)
 
 		// Update projected points 
@@ -297,7 +318,7 @@ function make2DProjectionDiagram(canvas){
 			let newProjection = project(p.data, projectionBasis)
 			let newCoords = points1D[i].convertToWorldCoordinates(newProjection)
 			// Create new tween
-			p.setTween({x: newCoords[0] - xOffset, y: newCoords[1] }) 
+			p.setTween({x: newCoords[0] - xOffset, y: newCoords[1] }, animate) 
 			// Divide (x,y) by the basis (it must be a scalar multiple) to get the new (x,0) coordinate 
 			newProjection[0] = newProjection[0] / vector[0]
 			// update points1D
@@ -305,20 +326,6 @@ function make2DProjectionDiagram(canvas){
 			points1D[i].translation.x = newCoords[0]
 		}
 	}
-
-	function update(time){
-		requestAnimationFrame(update);
-		TWEEN.update(time);
-		two.update();
-
-		if(isTouching){
-			let newMouse = cPoint.getDOMCoordinates(mousePos.x, mousePos.y)
-
-			updateProjection([newMouse.x, newMouse.y])
-			
-		}
-	}
-	requestAnimationFrame(update);
 
 	function getProjectionBasis(){
 		return projectionBasis
@@ -332,6 +339,15 @@ function make2DProjectionDiagram(canvas){
 	}
 
 
+	UpdateFunctions.push(function(){
+		two.update();
+
+		if(isTouching){
+			let newMouse = cPoint.getDOMCoordinates(mousePos.x, mousePos.y)
+
+			updateProjection([newMouse.x, newMouse.y], null, true)
+		}
+	})
 
 	return {computeBestProjection:computeBestProjection ,updateData:updateData, updateLabels: updateLabels, updateProjection: updateProjection, getProjectionBasis: getProjectionBasis};
 }
@@ -396,15 +412,21 @@ function initDiagram2D(ID, resultSpanID, initialLine) {
 									.onUpdate(function(value){
 										window.scrollTo(value.x, value.y)
 									})
+
+						timeForTween = 2000;
+						if (Math.abs(basis[0][0] - projectionLine.x) < 0.01 && Math.abs(basis[0][1] - projectionLine.y) < 0.01) {
+							timeForTween = 200;
+						}
+
 						let tween2 = new TWEEN.Tween({x:basis[0][0], y: basis[0][1]})
-								.to(projectionLine, 2000)
+								.to(projectionLine, timeForTween)
 								.delay(250)
 								.easing(TWEEN.Easing.Quadratic.InOut)
 				 				.onUpdate(function(value){
 				 					let vector = [value.x,value.y]
 				 					let scale = 1/Math.sqrt(dot(vector,vector))
 				 					vector = scaleVector(vector,scale)
-				 					diagram.updateProjection(vector, true)
+				 					diagram.updateProjection(vector, true, true)
 				 				})
 				 		tween.chain(tween2);
 				 			
@@ -422,6 +444,19 @@ function initDiagram2D(ID, resultSpanID, initialLine) {
 		});
     })
 }	
+
+function initDiagram3D(ID, resultSpanID) {
+	let canvas = document.querySelector("#" + ID)
+	let plot3d = new ThreePlotting(canvas, 600, 600);
+
+	let two = initTwojs('#'+ID+'-2d', 250, 250)
+	let diagram = makeSimple2D(two);
+
+	UpdateFunctions.push(function(){
+		plot3d.update();
+		two.update();
+	})
+}
 
 function dragOverHandler(ev) {
 	if(!ev.currentTarget.classList.contains('highlight')){
@@ -454,7 +489,9 @@ function processFile(file, currentTarget){
 	  var contents = e.target.result;
 	  Papa.parse(contents, {
 	  	complete: function(results){
-	  		ProcessHandlers[currentTarget.id](results)
+	  		if (ProcessHandlers[currentTarget.id]) {
+		  		ProcessHandlers[currentTarget.id](results)
+		  	}
 	  	}
 	  })
 	}
@@ -489,4 +526,16 @@ function dropHandler(ev) {
 document.addEventListener("DOMContentLoaded", function() {
 	initDiagram2D('projection-2d');
 	initDiagram2D('projection-2d-2', 'best-2d-projection', {x:-0.01,y:1});
+
+	initDiagram3D('projection-3d', 'best-3d-projection');
+
+	function update(time){
+		requestAnimationFrame(update);
+		TWEEN.update(time);
+		
+		for(let updateFunction of UpdateFunctions) {
+			updateFunction(time)
+		}
+	}
+	requestAnimationFrame(update);
 });
