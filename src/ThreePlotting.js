@@ -44,6 +44,8 @@ class ThreePlotting {
 		that.onDocumentKeyUp(event,that)
 	}, false);
 
+	this.points = [];
+
 	// TODO: Project points mathematically, tween them to this position on move 
 
 	// TODO: Draw the points in 2D 
@@ -55,14 +57,20 @@ class ThreePlotting {
   }
 
   updateData(data, classes) {
-  	// TODO: Clear old data ?
+  	for(let point of this.points) {
+  		this.scene.remove(point);
+  	}
+
   	this.points = [];
 
+  	// Plot points in 3D
+  	let processedData = [];
   	for(let datumRaw of data) {
   		let datum = []
   		for(let num of datumRaw) {
   			datum.push(Number(num));
   		}
+  		processedData.push(datum);
 
 		var geometry = new THREE.SphereGeometry( 0.5, 16, 16 );
 		var material = new THREE.MeshBasicMaterial({ color: classes[this.points.length] });
@@ -74,6 +82,11 @@ class ThreePlotting {
 		sphere.position.y = datum[1];
 		sphere.position.z = datum[2];	
   	}
+
+  	this.originalData = processedData; 
+  	this.classes = classes;
+
+  	this.projectPoints();
   }
 
   updateLabels(labels) {
@@ -85,29 +98,62 @@ class ThreePlotting {
   movementUpdate() {
   	let rotationSpeed = 0.04;
   	let plane = this.plane;
+  	let change = false;
+
   	if (this.isKeyPressed['A']) {
   		plane.rotation.x += rotationSpeed;
+  		change = true;
   	}
 
   	if (this.isKeyPressed['D']) {
   		plane.rotation.x -= rotationSpeed;
+  		change = true;
   	}
 
   	if (this.isKeyPressed['W']) {
   		plane.rotation.y += rotationSpeed;
+  		change = true;
   	}
 
   	if (this.isKeyPressed['S']) {
   		plane.rotation.y -= rotationSpeed;
+  		change = true;
   	}
 
   	if (this.isKeyPressed['Q']) {
   		plane.rotation.z += rotationSpeed;
+  		change = true;
   	}
 
   	if (this.isKeyPressed['E']) {
   		plane.rotation.z -= rotationSpeed;
+  		change = true;
   	}
+
+  	if(change) {
+  		this.projectPoints();
+  	}
+  	
+  }
+
+  projectPoints() {
+  	if(!this.originalData) return;
+  	let mathlib = new MathLibrary();
+  	let points2D = [];
+
+  	let v1 = new THREE.Vector3(1,0,0);
+	let v2 = new THREE.Vector3(0,0,1);
+	v1 = v1.applyMatrix4(this.plane.matrix);
+	v2 = v2.applyMatrix4(this.plane.matrix);
+	let basis = [[v1.x,v1.y,v1.z],[v2.x,v2.y,v2.z]];
+
+  	for(let datum of this.originalData) {
+  		let projectedPoint = mathlib.project(datum,basis);
+  		// Flip the Y because in 2D the Y axis is flipped 
+  		projectedPoint[1] *= -1;
+  		points2D.push(projectedPoint);
+  	}
+  	this.projectionCallback(points2D,this.classes);
   }
 
   onDocumentKeyUp(event,that) {
@@ -197,7 +243,7 @@ class ThreePlotting {
 
   createGrid(plane) {
   	var size = 20;
-	var divisions = 20;
+	var divisions = 10;
 	var gridHelper = new THREE.GridHelper(size,divisions,0x444444,0xd0d0d0);
 
 	if (plane=="XY"){

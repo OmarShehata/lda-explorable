@@ -7,6 +7,8 @@ let PURPLE = 'rgba(233, 88, 252,1)'
 let ProcessHandlers = {}
 let UpdateFunctions = []
 
+let MathLib = new MathLibrary();
+
 function initTwojs(id, width, height){
 	width = width || 640;
 	height = height || 250; 
@@ -82,52 +84,6 @@ function plotPoints(canvas, gridMeta, points, classes){
 	return circles;
 }
 
-function addVectors(v1,v2){
-	let v3 = []
-	for(let i = 0;i < v1.length; i++){
-		v3.push(v1[i]+v2[i])
-	}
-	return v3;
-}
-
-function scaleVector(v,s){
-	let v2 = []
-	for(let i = 0;i < v.length;i++){
-		v2.push(v[i]*s)
-	}
-	return v2;
-}
-
-function dot(v1,v2){
-	let result = 0;
-	for(let i = 0;i < v1.length; i++){
-		result += v1[i] * v2[i]
-	}
-	return result
-}
-
-function project(point, basis){
-	// Project a N dimensional point onto an N-k dimensional orthonormal basis
-	// where k >= 0 
-
-	// Initialize the vector
-	let projectedVector = []
-	for(let d of point){
-		projectedVector.push(0)
-	}
-	// The projection formula (see https://www.cliffsnotes.com/study-guides/algebra/linear-algebra/real-euclidean-vector-spaces/projection-onto-a-subspace)
-	for(let V of basis){
-		// (-4, 2) for basis [1,0]
-		// (-4 * x + 2 * y)
-		// 
-		let proj = scaleVector(V,dot(point,V))
-		proj = scaleVector(proj, 1/dot(V,V))
-		projectedVector = addVectors(projectedVector, proj)
-	}
-	
-	return projectedVector;
-}
-
 function makeSimple2D(canvas) {
 	let two = canvas; 
 
@@ -136,6 +92,8 @@ function makeSimple2D(canvas) {
 	let gridMeta = make2DAxes(gridX,gridY,two, 170, 1);
 
 	two.renderer.domElement.style['pointer-events'] = 'none';
+
+	return gridMeta;
 }
 
 function make2DProjectionDiagram(canvas){
@@ -181,7 +139,7 @@ function make2DProjectionDiagram(canvas){
 		// Project 
 		let newData = []
 		for(let datum of data){
-			let nDatum = project(datum,projectionBasis)
+			let nDatum = MathLib.project(datum,projectionBasis)
 			nDatum[1] = 0
 			nDatum[0] /= projectionBasis[0][0]
 			newData.push(nDatum)	
@@ -192,7 +150,7 @@ function make2DProjectionDiagram(canvas){
 		// Tween points to their projected positions 
 		for(let i=0;i<points2D.length;i++){
 			let point = points2D[i]
-			let nDatum = project(point.data, projectionBasis)
+			let nDatum = MathLib.project(point.data, projectionBasis)
 			let newCoords = point.convertToWorldCoordinates(nDatum)
 			let projected = {x:newCoords[0], y: newCoords[1]}  //{x: points1D[i].translation.x - xOffset, y: points1D[i].translation.y}
 
@@ -316,7 +274,7 @@ function make2DProjectionDiagram(canvas){
 			p.tween.stop()
 			// Re-project
 			projectionBasis = [vector]
-			let newProjection = project(p.data, projectionBasis)
+			let newProjection = MathLib.project(p.data, projectionBasis)
 			let newCoords = points1D[i].convertToWorldCoordinates(newProjection)
 			// Create new tween
 			p.setTween({x: newCoords[0] - xOffset, y: newCoords[1] }, animate) 
@@ -435,8 +393,8 @@ function initDiagram2D(ID, resultSpanID, initialLine) {
 									.easing(TWEEN.Easing.Quadratic.InOut)
 					 				.onUpdate(function(value){
 					 					let vector = [value.x,value.y]
-					 					let scale = 1/Math.sqrt(dot(vector,vector))
-					 					vector = scaleVector(vector,scale)
+					 					let scale = 1/Math.sqrt(MathLib.dot(vector,vector))
+					 					vector = MathLib.scaleVector(vector,scale)
 					 					diagram.updateProjection(vector, true, true)
 					 				})
 					 		tween.chain(tween2);
@@ -461,7 +419,15 @@ function initDiagram3D(ID, resultSpanID) {
 	let plot3d = new ThreePlotting(canvas, 600, 600);
 
 	let two = initTwojs('#'+ID+'-2d', 250, 250)
-	let diagram = makeSimple2D(two);
+	let gridMeta = makeSimple2D(two);
+	let projectedPoints = [];
+
+	plot3d.projectionCallback = function(points, classes) {
+		for(let p of projectedPoints) {
+			two.remove(p);
+		}
+		projectedPoints = plotPoints(two, gridMeta, points, classes);
+	}
 
 	UpdateFunctions.push(function(){
 		plot3d.update();
