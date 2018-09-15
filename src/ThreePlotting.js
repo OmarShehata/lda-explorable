@@ -20,9 +20,13 @@ class ThreePlotting {
 	scene.add(this.createAxis("Y")); 
 	scene.add(this.createAxis("Z"));
 
-	scene.add(this.createLabel("X",12,0,0));
-	scene.add(this.createLabel("Y",0,12,0));
-	scene.add(this.createLabel("Z",0,0,12));
+	this.xLabel = this.createLabel("X",12,0,0);
+	this.yLabel = this.createLabel("Y",0,12,0);
+	this.zLabel = this.createLabel("Z",0,0,12);
+
+	scene.add(this.xLabel);
+	scene.add(this.yLabel);
+	scene.add(this.zLabel);
 
 	this.addLights(scene);
 
@@ -40,8 +44,6 @@ class ThreePlotting {
 		that.onDocumentKeyUp(event,that)
 	}, false);
 
-	// TODO: Read CSV and plot the points with color as class
-
 	// TODO: Project points mathematically, tween them to this position on move 
 
 	// TODO: Draw the points in 2D 
@@ -50,6 +52,34 @@ class ThreePlotting {
   update() {
   	this.renderer.render(this.scene, this.camera);
   	this.movementUpdate();
+  }
+
+  updateData(data, classes) {
+  	// TODO: Clear old data ?
+  	this.points = [];
+
+  	for(let datumRaw of data) {
+  		let datum = []
+  		for(let num of datumRaw) {
+  			datum.push(Number(num));
+  		}
+
+		var geometry = new THREE.SphereGeometry( 0.5, 16, 16 );
+		var material = new THREE.MeshBasicMaterial({ color: classes[this.points.length] });
+		var sphere = new THREE.Mesh( geometry, material );
+		this.scene.add( sphere );
+		this.points.push(sphere);
+		
+		sphere.position.x = datum[0];
+		sphere.position.y = datum[1];
+		sphere.position.z = datum[2];	
+  	}
+  }
+
+  updateLabels(labels) {
+  	this.xLabel.updateText(labels['X']);
+  	this.yLabel.updateText(labels['Y']);
+  	this.zLabel.updateText(labels['Z']);
   }
 
   movementUpdate() {
@@ -229,6 +259,12 @@ class ThreePlotting {
 	mesh.position.set(x,y,z);
 	mesh.ctx = ctx;
 	mesh.canvas = canvas;
+
+	mesh.updateText = function(newText) {
+		this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+		this.ctx.fillText( newText, this.canvas.width/2, this.canvas.height/2);
+		this.material.map.needsUpdate = true;
+	}
 
 	return mesh;
   }

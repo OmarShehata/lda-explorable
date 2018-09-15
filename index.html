@@ -53,9 +53,10 @@
 	<h2>Higher Dimensions</h2>
 	<p>To see how powerful this is, let's go one dimension up. Let's say you've got 3D data and you wanted to reduce it to 2D. The diagram below shows one such projection. </p>
 	<p>If you're using a keyboard, you can rotate the projection plane with W/S, A/D and Q/E.</p>
-	<div id="container-3d">
+	<div id="container-3d" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);">
 		<canvas id="projection-3d" class="figure"></canvas>
 		<div id="projection-3d-2d" class="figure"></div>
+		<div style="clear:both"></div>
 	</div>
 	<p>It's already much harder. There's 3 degrees of motion for a plane in 3D as opposed to 1 for a line in 2D. The optimal here is the plane defined by <span id="best-3d-projection" class="projection-link">x + y + z = 0</span>. We need an algorithm so we can find the precise optimal, but also for situations where we can't even visualize the higher dimension. </p>
 	<p>Here is 4 dimensional data projected down to two. There are 6 degrees of motion. What we want is just like above, to find the projection that gives us the best separation in a lower dimension.</p>

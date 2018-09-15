@@ -1,7 +1,7 @@
 let RED = 'rgba(255, 79, 73, 1)';
 let BLUE ='rgba(107,174,255,1)';
 let ORANGE = 'rgba(244, 194, 66,1)';
-let GREEN = 'rgba(rgb(107, 244, 65,1)';
+let GREEN = 'rgba(107, 244, 65,1)';
 let PURPLE = 'rgba(233, 88, 252,1)'
 
 let ProcessHandlers = {}
@@ -135,6 +135,7 @@ function makeSimple2D(canvas) {
 	let gridY = 205;
 	let gridMeta = make2DAxes(gridX,gridY,two, 170, 1);
 
+	two.renderer.domElement.style['pointer-events'] = 'none';
 }
 
 function make2DProjectionDiagram(canvas){
@@ -352,7 +353,7 @@ function make2DProjectionDiagram(canvas){
 	return {computeBestProjection:computeBestProjection ,updateData:updateData, updateLabels: updateLabels, updateProjection: updateProjection, getProjectionBasis: getProjectionBasis};
 }
 
-function parse2DData(papaResults){
+function parseData(papaResults){
 	let results = papaResults
 
 	// Get headers 
@@ -363,14 +364,14 @@ function parse2DData(papaResults){
 	let classDict = {}
 	let classes = []
 	let data = []
-	// Assume the first 2 are data, and the third is class
+	// Assume the first N-1 are data, and the Nth is class
 	for(let datum of results.data){
-		let d_class = datum[2].trim()
+		let d_class = datum[datum.length-1].trim()
 		if(classDict[d_class] == undefined){
 			classDict[d_class] = availableClasses.shift()
 		}
 		classes.push(classDict[d_class])
-		data.push(datum.slice(0,2))
+		data.push(datum.slice(0,datum.length-1))
 	}
 
 
@@ -388,7 +389,7 @@ function initDiagram2D(ID, resultSpanID, initialLine) {
 				let diagram = make2DProjectionDiagram(two);
 
 				ProcessHandlers[ID] = function(results) {
-					let csvData = parse2DData(results)
+					let csvData = parseData(results)
 					let header = csvData.header 
 
 					diagram.updateLabels(header[0],header[1])
@@ -399,36 +400,46 @@ function initDiagram2D(ID, resultSpanID, initialLine) {
 						let span = document.querySelector("#" + resultSpanID)
 						span.innerHTML = `(${projectionLine.y.toFixed(2)})y = (${projectionLine.x.toFixed(2)})x`;
 						span.onclick = function() {
-						let basis = diagram.getProjectionBasis()
-						let timeForTween = 1000;
-						let targetY = document.querySelector("#" + ID).offsetTop - 30
-						if(Math.abs(window.scrollY - targetY) < 50){
-							timeForTween = 100;
-						}
-						let tween = new TWEEN.Tween({x: 0, y: window.scrollY})
-									.to({x:0, y: targetY}, timeForTween)
+							let basis = diagram.getProjectionBasis()
+							let timeForTween = 1000;
+							let targetY = document.querySelector("#" + ID).offsetTop - 30
+							if(Math.abs(window.scrollY - targetY) < 50){
+								timeForTween = 100;
+							}
+							let tween = new TWEEN.Tween({x: 0, y: window.scrollY})
+										.to({x:0, y: targetY}, timeForTween)
+										.easing(TWEEN.Easing.Quadratic.InOut)
+										.start()
+										.onUpdate(function(value){
+											window.scrollTo(value.x, value.y)
+										})
+
+							var dx = Math.abs(basis[0][0] - projectionLine.x);
+							var dy = Math.abs(basis[0][1] - projectionLine.y);
+							var dxN = Math.abs(basis[0][0] - projectionLine.x * -1);
+							var dyN = Math.abs(basis[0][1] - projectionLine.y * -1);
+
+							if(dxN + dyN < dx + dy) {
+								projectionLine.x *= -1;
+								projectionLine.y *= -1;
+							}
+
+							timeForTween = 2000;
+							if (Math.abs(basis[0][0] - projectionLine.x) < 0.01 && Math.abs(basis[0][1] - projectionLine.y) < 0.01) {
+								timeForTween = 200;
+							}
+
+							let tween2 = new TWEEN.Tween({x:basis[0][0], y: basis[0][1]})
+									.to(projectionLine, timeForTween)
+									.delay(250)
 									.easing(TWEEN.Easing.Quadratic.InOut)
-									.start()
-									.onUpdate(function(value){
-										window.scrollTo(value.x, value.y)
-									})
-
-						timeForTween = 2000;
-						if (Math.abs(basis[0][0] - projectionLine.x) < 0.01 && Math.abs(basis[0][1] - projectionLine.y) < 0.01) {
-							timeForTween = 200;
-						}
-
-						let tween2 = new TWEEN.Tween({x:basis[0][0], y: basis[0][1]})
-								.to(projectionLine, timeForTween)
-								.delay(250)
-								.easing(TWEEN.Easing.Quadratic.InOut)
-				 				.onUpdate(function(value){
-				 					let vector = [value.x,value.y]
-				 					let scale = 1/Math.sqrt(dot(vector,vector))
-				 					vector = scaleVector(vector,scale)
-				 					diagram.updateProjection(vector, true, true)
-				 				})
-				 		tween.chain(tween2);
+					 				.onUpdate(function(value){
+					 					let vector = [value.x,value.y]
+					 					let scale = 1/Math.sqrt(dot(vector,vector))
+					 					vector = scaleVector(vector,scale)
+					 					diagram.updateProjection(vector, true, true)
+					 				})
+					 		tween.chain(tween2);
 				 			
 						}
 					}
@@ -456,6 +467,27 @@ function initDiagram3D(ID, resultSpanID) {
 		plot3d.update();
 		two.update();
 	})
+
+	fetch("data/sample-3d.csv")
+    .then(res => res.blob())
+    .then(res => {
+    	Papa.parse(res, {
+			complete: function(results) {
+				ProcessHandlers['container-3d'] = function(results) {
+					let csvData = parseData(results)
+					let header = csvData.header 
+
+					let labels = {'X': header[0], 'Y': header[1], 'Z': header[2]};
+					plot3d.updateLabels(labels);
+					plot3d.updateData(csvData.data, csvData.classes);
+				};
+
+				ProcessHandlers['container-3d'](results)
+			}
+		})
+    });
+
+	
 }
 
 function dragOverHandler(ev) {
