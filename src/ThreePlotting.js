@@ -45,10 +45,6 @@ class ThreePlotting {
 	}, false);
 
 	this.points = [];
-
-	// TODO: Project points mathematically, tween them to this position on move 
-
-	// TODO: Draw the points in 2D 
   }
 
   update() {
@@ -81,6 +77,7 @@ class ThreePlotting {
 		sphere.position.x = datum[0];
 		sphere.position.y = datum[1];
 		sphere.position.z = datum[2];	
+		sphere.originalPosition = sphere.position.clone();
   	}
 
   	this.originalData = processedData; 
@@ -101,22 +98,22 @@ class ThreePlotting {
   	let change = false;
 
   	if (this.isKeyPressed['A']) {
-  		plane.rotation.x += rotationSpeed;
-  		change = true;
-  	}
-
-  	if (this.isKeyPressed['D']) {
-  		plane.rotation.x -= rotationSpeed;
-  		change = true;
-  	}
-
-  	if (this.isKeyPressed['W']) {
   		plane.rotation.y += rotationSpeed;
   		change = true;
   	}
 
-  	if (this.isKeyPressed['S']) {
+  	if (this.isKeyPressed['D']) {
   		plane.rotation.y -= rotationSpeed;
+  		change = true;
+  	}
+
+  	if (this.isKeyPressed['W']) {
+  		plane.rotation.x += rotationSpeed;
+  		change = true;
+  	}
+
+  	if (this.isKeyPressed['S']) {
+  		plane.rotation.x -= rotationSpeed;
   		change = true;
   	}
 
@@ -131,13 +128,15 @@ class ThreePlotting {
   	}
 
   	if(change) {
-  		this.projectPoints();
+  		this.projectPoints(true);
+
   	}
   	
   }
 
-  projectPoints() {
+  projectPoints(doTween) {
   	if(!this.originalData) return;
+
   	let mathlib = new MathLibrary();
   	let points2D = [];
 
@@ -146,14 +145,42 @@ class ThreePlotting {
 	v1 = v1.applyMatrix4(this.plane.matrix);
 	v2 = v2.applyMatrix4(this.plane.matrix);
 	let basis = [[v1.x,v1.y,v1.z],[v2.x,v2.y,v2.z]];
+	
+	let inverse = this.plane.matrix.getInverse(this.plane.matrix);
 
   	for(let datum of this.originalData) {
   		let projectedPoint = mathlib.project(datum,basis);
+  		let originalPoint = this.points[points2D.length];
+  		
+  		let vector2D = new THREE.Vector3(projectedPoint[0], projectedPoint[1], projectedPoint[2]);
+  		vector2D = vector2D.applyMatrix4(inverse);
   		// Flip the Y because in 2D the Y axis is flipped 
-  		projectedPoint[1] *= -1;
-  		points2D.push(projectedPoint);
+  		points2D.push([vector2D.x, vector2D.z]);
+
+  		if (doTween) {
+  			originalPoint.position.x = originalPoint.originalPosition.x;
+  			originalPoint.position.y = originalPoint.originalPosition.y;
+  			originalPoint.position.z = originalPoint.originalPosition.z;
+  			if(originalPoint.tween){
+  				originalPoint.tween.stop();
+  			}
+	  		originalPoint.tween = new TWEEN.Tween(originalPoint.position)
+						.to({x:projectedPoint[0], y:projectedPoint[1], z:projectedPoint[2]}, 700)
+						.delay(400)
+						.easing(TWEEN.Easing.Quadratic.InOut)
+
+			originalPoint.tween.chain(
+				new TWEEN.Tween(originalPoint.position)
+					.to(originalPoint.originalPosition,700)
+					.delay(1000)
+					.easing(TWEEN.Easing.Quadratic.InOut)
+				)	
+			originalPoint.tween.start();
+  		}
   	}
   	this.projectionCallback(points2D,this.classes);
+
+
   }
 
   onDocumentKeyUp(event,that) {

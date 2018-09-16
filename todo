@@ -1,5 +1,6 @@
-* Recreate JS interface with 3D to 2D instead. 
-* Come up with 3D Data for that.
+* Use LDA to find best separation for 3D data
+* Create a link that you click on that gives you the best plane. 
+
 * Come up with 4D data.
 	* Use LDA to find separation for 4D data. Hide some good structure in it
 

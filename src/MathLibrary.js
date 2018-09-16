@@ -34,9 +34,6 @@ class MathLibrary {
 		}
 		// The projection formula (see https://www.cliffsnotes.com/study-guides/algebra/linear-algebra/real-euclidean-vector-spaces/projection-onto-a-subspace)
 		for(let V of basis){
-			// (-4, 2) for basis [1,0]
-			// (-4 * x + 2 * y)
-			// 
 			let proj = this.scaleVector(V,this.dot(point,V))
 			proj = this.scaleVector(proj, 1/this.dot(V,V))
 			projectedVector = this.addVectors(projectedVector, proj)
