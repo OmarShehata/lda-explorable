@@ -1,8 +1,4 @@
 class LinearDiscriminantAnalysis {
-  constructor(n_components) {
-  	this.n_components = n_components || 1;
-  }
-  
   _compute_cov_matrix(columns){
     let cov = []
     for(let r=0;r<columns.length;r++){
@@ -96,43 +92,32 @@ class LinearDiscriminantAnalysis {
     // So instead, we bring (Sw) to the other side 
     // (Sw)^-1 (Sb) x = Lambda x 
     // But I think this only works if Sw has an inverse
+    // See also http://fourier.eng.hmc.edu/e161/lectures/algebra/node7.html
     let S = numeric.dot(numeric.inv(Sw),Sb); 
     let eigen = numeric.eig(S)
+    console.log(eigen)
+
     let evecs = []
     for(let i=0;i<eigen.E.x.length;i ++){
-      let v = eigen.E.x[i];
-      evecs.push({vector:v, value: eigen.lambda.x[i]})
+      let column = []
+      for(let j=0;j<eigen.E.x.length;j++){
+        column.push(eigen.E.x[j][i])
+      }
+      evecs.push({column:column, value: eigen.lambda.x[i]})
     }
 
   	// Sort eigenvectors by eigenvalues 
     evecs.sort(function(a,b){ return a.value < b.value })
 
   	this.scalings = [];
-
     for(let v of evecs){
-      this.scalings.push(v.vector)
+      this.scalings.push(v.column)
     }
 
   }
 
   getReducedScalings() {
-
-    let N = this.n_components;
-    if(N > this.scalings.length){
-      N = this.scalings.length
-    }
-
-    let reduced = []
-
-    for(let r=0;r<this.scalings.length;r++){
-      let newRow = []
-      for(let c=0;c<N;c++){
-        newRow.push(this.scalings[r][c])
-      }
-      reduced.push(newRow)
-    }
-
-    return reduced;
+    return this.scalings;
   }
 
 }

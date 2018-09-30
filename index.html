@@ -21,7 +21,7 @@
 		A Geometric Intuition for Linear Discriminant Analysis
 	</h1>
 	<p class="centered-text faded-text subtitle">
-		Omar Shehata – St. Olaf College – 2018
+		Omar Shehata &mdash; St. Olaf College &mdash; 2018
 	</p>
 	<p class="centered-text faded-text">
 		<i>(<span id="minutes_read"></span> min read)</i>
@@ -29,41 +29,50 @@
 	<!-- 
 	Sources: https://sebastianraschka.com/Articles/2014_python_lda.html#%E2%80%93-bit-by-bit
 	-->
-	<p>Linear Discriminant Analysis, or LDA, is a useful technique in machine learning for <b>classification</b> and <b>dimensionality reduction</b> (also used in facial recognition? https://link.springer.com/article/10.1007%2Fs10115-006-0013-y ).</p>
-	<p>The idea that you can take a rich 10 dimensional space and reduce it to 3 dimensions, while keeping most of the information intact, has always seemed a bit like magic to me. It's often used as a preprocessing step since a lot of algorithms perform better on a smaller number of dimensions. And of course, visualizing and reasoning about a 3 dimensional space is mucher easier than a higher dimensional one.</p> 
-	<p>I like to think of LDA as a mathematical tool that allows you to peer into spaces that cannot be seen. It's like piercing the veil of the unknowable.</p>
-	<p>This article will explore this statistical technique with a geometric approach. "Add geometry quote here". No background in machine learning is needed. </p>
-	<!-- 
-	- Add quote by William K CLifford abotu how geometric is the gate to science and so easy a child can go through it. 
-	-->
+	<p>Linear Discriminant Analysis, or LDA, is a useful technique in machine learning for <b>classification</b> and <b>dimensionality reduction</b>. It's often used as a preprocessing step since a lot of algorithms perform better on a smaller number of dimensions. </p>
+	<p>The idea that you can take a rich 10 dimensional space and reduce it to 3 dimensions, while keeping most of the information intact, has always seemed a bit like magic to me. I like to think of LDA as a mathematical tool that allows you to peer into spaces that cannot be seen. It's like piercing the veil of the unknowable.</p> 
+	<p>
+		In this article, I'd like to explore the fascinating geometric side of this popular statistical technique. My hope is that this focus on geometric intuition makes these ideas accessible to many more people.  
+	</p>
+	<blockquote>
+		For geometry is the gate of science, and the gate is so low and small that one can only enter it as a child.
+	</blockquote>
+	<cite>&mdash; William K. Clifford</cite>
 	<hr>
-	<h2>The Problem</h2>
-	<p>You're given high dimensional data and you're trying to reduce it. This need not be anything esoteric. It could be data about houses on the market with price, age, size, distance to public transport and number of rooms. That's already 5 dimensions – too many to visualize all at once.</p>
+	<h2>The Premise</h2>
+	<p>You're given high dimensional data and you're trying to reduce it. This need not be anything esoteric. It could be data about houses on the market with price, age, size, distance to public transport and number of rooms. That's already 5 dimensions &mdash; too many to visualize all at once.</p>
 	<p>Like any good mathematician, you can start with a simple approach and explore its consequences. What happens if you just drop one of the dimensions?</p>
 	<p>Let's see what this looks like in a simple case. Here is some made up data about houses that's only in 2 dimensions. Blue dots could be houses that were sold and red ones are still looking for a buyer.</p>
-	<div id="projection-2d" class="figure" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);"></div>
-	<p>The graph on the left is the original data, and the line on the right is what it would look like after we drop it 1 dimension.</p>
+	<div id="projection-2d" class="figure" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);" data-initial-line='{"x":1, "y":0.001}'></div>
+	<p>The graph on the left is the original data, and the line on the right is what it would look like after we drop it 1 dimension by just ignoring the Y axis.</p>
 	<p>We've succesfully reduced our data, but remember that our goal is to reduce it without losing information. In this case, you can easily tell that there is a pattern to the data when looking at the 2D view. This pattern is completely lost in the 1D view.</p>	
-	<p>Another way to think about this is that if you were training an algorithm to predict whether houses would be sold using this as training data, it would perform much better using the original data than with the reduced version. This is bad because we wanted to transform this data to make our algorithms perform better, not worse!</p>
-	<p>How can we do better? We dropped the Y axis above, so perhaps we could drop the X axis instead. You can see below how that still crushes the pattern. But notice that these aren't the only options. Geometrically, there are an infinite number of 1 dimensional lines that we could project down onto! </p>
+	<p>Another way to think about this is to consider prediction. Given a new unclassified dot in the 2D view, you can easily guess whether it should be blue or red based on whether it's closer to the upper right or bottom left cluster. This would be much harder if you were given just the 1D view. In other words, our prediction algorithms would perform <i>worse</i> on the reduced data. </p>
+	<p>We've sacrificed accuracy for simplicity, but maybe there's a better way to reduce it. Perhaps we could drop the X axis instead?</p>
 	<p>Click and drag in the 2D graph below to rotate the projection line. </p> 
-	<div id="projection-2d-2" class="figure" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);"></div>
-	<p>Can you see how in some projections it's much easier to see the separation in 1D than in others? In fact, there is one particular line (which I used LDA to find), defined by the equation <span id="best-2d-projection" class="projection-link">y = 0</span> that produces the best possible separation for this data. <!-- If we were to then apply some classification algorithm, it would preform just as well on the reduced data as on the original, so we can throw away the high dimensional data and just work with the low dimensional! --></p>
-	<p>We've certainly lost <i>some</i> information in that the reduced data only has one axis, but we haven't lost any important insights. In fact, we've actually gained some insight. The blue dots are all on one side and the red dots on the other. If you were given a new unclassified data point, it would be <i>easier</i> to predict whether it should be blue or red by looking at the 1D view. </p>
-	<p>By removing information, we actually learned more about our data!</p>
+	<div id="projection-2d-2" class="figure" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);" data-initial-line='{"x":1, "y":0.001}'></div>
+	<p>It seems that <span class="projection-link" data-line='{"x":0.001, "y": 1}' data-figure="projection-2d-2">dropping the X axis</span> isn't any better, but these aren't the only two choices. Geometrically, we have an infinite number of lines we can project on! </p>
+	<p>Out of all these possible lines, the line <span class="projection-link" data-figure="projection-2d-2" data-line='{"best":true}'>y = 0</span> provides the best possible separation. This best line is what LDA allows us to find.</p>
+	<p>The reduced data is only 1 dimensional, but it captures the important insight of the higher dimensional view. Think again about prediction. If we're looking at the 1D view, all we have to do to predict whether a new point should be blue or red is just see whether it's on the right or left side. </p>
+	<p>This means that not only would our prediction algorithms perform just as good on the reduced data, it might even perform better! Strangely enough, by removing information, we've actually gained some insight. </p>
 	<h2>Higher Dimensions</h2>
-	<p>To see how powerful this is, let's go one dimension up. Let's say you've got 3D data and you wanted to reduce it to 2D. The diagram below shows one such projection. </p>
+	<p>Reducing 2D data is easy, but usually not very useful. Let's go one dimension up and take a look at an example that we can still visualize.</p>
+	<p>Now we've got 3D data, this time with 3 classes, and we want to reduce it to 2D. The diagram below shows one such projection. </p>
 	<p>If you're using a keyboard, you can rotate the projection plane with W/S, A/D and Q/E.</p>
 	<div id="container-3d" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);">
 		<canvas id="projection-3d" class="figure"></canvas>
 		<div id="projection-3d-2d" class="figure"></div>
 		<div style="clear:both"></div>
 	</div>
-	<p>It's already much harder. There's 3 degrees of motion for a plane in 3D as opposed to 1 for a line in 2D. The optimal here is the plane defined by <span id="best-3d-projection" class="projection-link">x + y + z = 0</span>. We need an algorithm so we can find the precise optimal, but also for situations where we can't even visualize the higher dimension. </p>
+	<p>Again, there's an obvious pattern to the data in its original form that's lost in the reduced view. Finding the best projection plane by hand that retains this pattern is harder problem now because there's three degrees of motion for a plane in 3D compared to one for a line in 2D.</p>
+	<p>For this dataset, this best plane is <span class="projection-link" data-figure="projection-3d" data-line='{"best":true}'>x + y + z = 0</span>. Again, this best projection is what LDA can tell us.</p>
+	<p>Now here's the real test. What if we had 4D data that we couldn't even visualize? Below is what it looks projected down to 2D.</p>
+	<p>INSERT GRAPH HERE</p>
+	<p>It looks as if there's no pattern here, and no hope of creating a good prediction algorithm. </p>
+	<!-- 
 	<p>Here is 4 dimensional data projected down to two. There are 6 degrees of motion. What we want is just like above, to find the projection that gives us the best separation in a lower dimension.</p>
 	<p><i>One 2D view, with 6 angles on top, of a rotating plane that projects 4D points into 2D.</i></p>
-	<p>This one is much harder to do intuitively by hand. When our intuition fails, we look to mathematics to guide us.</p>
-	<h2>The Algorithm</h2>
+	<p>This one is much harder to do intuitively by hand. When our intuition fails, we look to mathematics to guide us.</p> -->
+	<h2>Devising an Algorithm</h2>
 	<p>The exciting part of mathematics, for me, is figuring out how to take a real world problem like that and phrase it in a way that our mathematical tools can tackle.</p>
 	<p>The first step is to recognize this as an optimization problem. We know it's an optimization problem because there exists a set of options, all one dimensional lines in the 2D case, and we're trying to find the best one.</p>
 	<p>But how do we know which one is the "best" ? We know intuitively because it gives us the best separation. So far we've been doing this visually. We need to precisely articulate this definition to solve it as an optimization problem. </p>

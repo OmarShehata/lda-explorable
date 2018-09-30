@@ -24,10 +24,11 @@ function initTwojs(id, width, height){
     return two;
 }
 
-function make2DAxes(x,y, canvas, size, lWidth){
+function make2DAxes(x,y, canvas, size, lWidth, gLines){
 	let lineColor = "rgba(0, 0, 0, 1)";
 	let lineWidth = lWidth || 2;
 	let gridSize = size || 200;
+	let gridLines = gLines || 10;
 	let origin = {x:x+gridSize/2,y:y-gridSize/2};
 
 	let line = canvas.makeLine(origin.x, y, x+ gridSize/2, y - gridSize);
@@ -39,7 +40,7 @@ function make2DAxes(x,y, canvas, size, lWidth){
 	line.stroke = lineColor;
 
 	// Make grid 
-	let spacing = Math.round(gridSize/10);
+	let spacing = Math.round(gridSize/gridLines);
 
 	for(let X=x; X<=x+gridSize; X+=spacing){
 		// Vertical lines
@@ -88,8 +89,8 @@ function makeSimple2D(canvas) {
 	let two = canvas; 
 
 	let gridX = 35;
-	let gridY = 205;
-	let gridMeta = make2DAxes(gridX,gridY,two, 170, 1);
+	let gridY = 265;
+	let gridMeta = make2DAxes(gridX,gridY,two, 240, 1, 16);
 
 	two.renderer.domElement.style['pointer-events'] = 'none';
 
@@ -294,7 +295,7 @@ function make2DProjectionDiagram(canvas){
 		let LDA = new LinearDiscriminantAnalysis();
 		LDA.fit(csvData.data, csvData.classes)
 		let scalings = LDA.getReducedScalings()
-		return {x:scalings[0][0], y:scalings[1][0]}
+		return {x:scalings[0][0], y:scalings[0][1]}
 	}
 
 
@@ -336,8 +337,9 @@ function parseData(papaResults){
 	return {header:header, data:data, classes: classes}
 }
 
-function initDiagram2D(ID, resultSpanID, initialLine) {
+function initDiagram2D(ID) {
 	let two = initTwojs('#'+ID)
+	let initialLine = JSON.parse(document.querySelector("#" + ID).dataset.initialLine)
 
 	fetch("data/sample-2d.csv")
     .then(res => res.blob())
@@ -353,54 +355,63 @@ function initDiagram2D(ID, resultSpanID, initialLine) {
 					diagram.updateLabels(header[0],header[1])
 					diagram.updateData(csvData.data, csvData.classes);
 
-					let projectionLine = diagram.computeBestProjection(csvData)
-					if(resultSpanID) {
-						let span = document.querySelector("#" + resultSpanID)
-						span.innerHTML = `(${projectionLine.y.toFixed(2)})y = (${projectionLine.x.toFixed(2)})x`;
-						span.onclick = function() {
-							let basis = diagram.getProjectionBasis()
-							let timeForTween = 1000;
-							let targetY = document.querySelector("#" + ID).offsetTop - 30
-							if(Math.abs(window.scrollY - targetY) < 50){
-								timeForTween = 100;
+					
+					let links = document.querySelectorAll(".projection-link");
+
+					for(let link of links) {
+						if(link.dataset.figure == ID) {
+							let lineToLink = JSON.parse(link.dataset.line);
+							let projectionLine = lineToLink;
+							if(lineToLink.best) {
+								projectionLine = diagram.computeBestProjection(csvData);
+								link.innerHTML = `(${projectionLine.y.toFixed(2)})y = (${projectionLine.x.toFixed(2)})x`;
 							}
-							let tween = new TWEEN.Tween({x: 0, y: window.scrollY})
-										.to({x:0, y: targetY}, timeForTween)
+							link.onclick = function() {
+								let basis = diagram.getProjectionBasis()
+								let timeForTween = 1000;
+								let targetY = document.querySelector("#" + ID).offsetTop - 30
+								if(Math.abs(window.scrollY - targetY) < 50){
+									timeForTween = 100;
+								}
+								let tween = new TWEEN.Tween({x: 0, y: window.scrollY})
+											.to({x:0, y: targetY}, timeForTween)
+											.easing(TWEEN.Easing.Quadratic.InOut)
+											.start()
+											.onUpdate(function(value){
+												window.scrollTo(value.x, value.y)
+											})
+
+								var dx = Math.abs(basis[0][0] - projectionLine.x);
+								var dy = Math.abs(basis[0][1] - projectionLine.y);
+								var dxN = Math.abs(basis[0][0] - projectionLine.x * -1);
+								var dyN = Math.abs(basis[0][1] - projectionLine.y * -1);
+
+								if(dxN + dyN < dx + dy) {
+									projectionLine.x *= -1;
+									projectionLine.y *= -1;
+								}
+
+								timeForTween = 2000;
+								if (Math.abs(basis[0][0] - projectionLine.x) < 0.01 && Math.abs(basis[0][1] - projectionLine.y) < 0.01) {
+									timeForTween = 200;
+								}
+
+								let tween2 = new TWEEN.Tween({x:basis[0][0], y: basis[0][1]})
+										.to(projectionLine, timeForTween)
+										.delay(250)
 										.easing(TWEEN.Easing.Quadratic.InOut)
-										.start()
-										.onUpdate(function(value){
-											window.scrollTo(value.x, value.y)
-										})
-
-							var dx = Math.abs(basis[0][0] - projectionLine.x);
-							var dy = Math.abs(basis[0][1] - projectionLine.y);
-							var dxN = Math.abs(basis[0][0] - projectionLine.x * -1);
-							var dyN = Math.abs(basis[0][1] - projectionLine.y * -1);
-
-							if(dxN + dyN < dx + dy) {
-								projectionLine.x *= -1;
-								projectionLine.y *= -1;
+						 				.onUpdate(function(value){
+						 					let vector = [value.x,value.y]
+						 					let scale = 1/Math.sqrt(MathLib.dot(vector,vector))
+						 					vector = MathLib.scaleVector(vector,scale)
+						 					diagram.updateProjection(vector, true, true)
+						 				})
+						 		tween.chain(tween2);
+					 			
 							}
-
-							timeForTween = 2000;
-							if (Math.abs(basis[0][0] - projectionLine.x) < 0.01 && Math.abs(basis[0][1] - projectionLine.y) < 0.01) {
-								timeForTween = 200;
-							}
-
-							let tween2 = new TWEEN.Tween({x:basis[0][0], y: basis[0][1]})
-									.to(projectionLine, timeForTween)
-									.delay(250)
-									.easing(TWEEN.Easing.Quadratic.InOut)
-					 				.onUpdate(function(value){
-					 					let vector = [value.x,value.y]
-					 					let scale = 1/Math.sqrt(MathLib.dot(vector,vector))
-					 					vector = MathLib.scaleVector(vector,scale)
-					 					diagram.updateProjection(vector, true, true)
-					 				})
-					 		tween.chain(tween2);
-				 			
 						}
 					}
+					
 
 					if(initialLine) {
 	 					diagram.updateProjection([initialLine.x, initialLine.y], true)
@@ -414,13 +425,24 @@ function initDiagram2D(ID, resultSpanID, initialLine) {
     })
 }	
 
-function initDiagram3D(ID, resultSpanID) {
+function initDiagram3D(ID) {
 	let canvas = document.querySelector("#" + ID)
 	let plot3d = new ThreePlotting(canvas, 600, 600);
 
-	let two = initTwojs('#'+ID+'-2d', 250, 250)
+	let two = initTwojs('#'+ID+'-2d', 320, 320)
 	let gridMeta = makeSimple2D(two);
 	let projectedPoints = [];
+
+	function computeBestProjection(csvData){
+		let LDA = new LinearDiscriminantAnalysis(3);
+		LDA.fit(csvData.data, csvData.classes)
+		let scalings = LDA.getReducedScalings()
+		return {
+				v1:{x:scalings[0][0], y:scalings[0][1], z:scalings[0][2]},
+				v2:{x:scalings[1][0], y:scalings[1][1], z:scalings[1][2]},
+				v3:{x:scalings[2][0], y:scalings[2][1], z:scalings[2][2]}
+			}
+	}
 
 	plot3d.projectionCallback = function(points, classes) {
 		for(let p of projectedPoints) {
@@ -446,6 +468,56 @@ function initDiagram3D(ID, resultSpanID) {
 					let labels = {'X': header[0], 'Y': header[1], 'Z': header[2]};
 					plot3d.updateLabels(labels);
 					plot3d.updateData(csvData.data, csvData.classes);
+
+					let links = document.querySelectorAll(".projection-link");
+
+					for(let link of links) {
+						if(link.dataset.figure == ID) {
+							link.onclick = function() {
+								let lineToLink = JSON.parse(this.dataset.line);
+								let projectionPlane = lineToLink;
+
+								if(lineToLink.best) {
+									projectionPlane = computeBestProjection(csvData);
+								}
+
+								let timeForTween = 1000;
+								let targetY = document.querySelector("#" + ID).offsetTop - 30
+								if(Math.abs(window.scrollY - targetY) < 50){
+									timeForTween = 100;
+								}
+								// Scroll to the diagram
+								let tween = new TWEEN.Tween({x: 0, y: window.scrollY})
+											.to({x:0, y: targetY}, timeForTween)
+											.easing(TWEEN.Easing.Quadratic.InOut)
+											.start()
+											.onUpdate(function(value){
+												window.scrollTo(value.x, value.y)
+											})
+
+								// Rotate the plane to the given projection 
+								timeForTween = 2000;
+								
+								let targetQuaternion = plot3d.getQuaternionFromBasis(projectionPlane);
+
+								let currentQuaternion = new THREE.Quaternion()
+								let scratch = new THREE.Vector3();
+    							plot3d.plane.matrix.decompose(scratch, currentQuaternion, scratch);
+
+					 			let tween2 = new TWEEN.Tween(currentQuaternion)
+										.to(targetQuaternion, timeForTween)
+										.delay(250)
+										.easing(TWEEN.Easing.Quadratic.InOut)
+						 				.onUpdate(function(value){
+						 					value.normalize()
+						 					plot3d.plane.quaternion.set(value.x, value.y, value.z, value.w)
+    										plot3d.projectPoints(true);
+						 				})
+						 		tween.chain(tween2);
+							}
+						}
+					}
+
 				};
 
 				ProcessHandlers['container-3d'](results)
@@ -523,9 +595,9 @@ function dropHandler(ev) {
 
 document.addEventListener("DOMContentLoaded", function() {
 	initDiagram2D('projection-2d');
-	initDiagram2D('projection-2d-2', 'best-2d-projection', {x:-0.01,y:1});
+	initDiagram2D('projection-2d-2');
 
-	initDiagram3D('projection-3d', 'best-3d-projection');
+	initDiagram3D('projection-3d');
 
 	function update(time){
 		requestAnimationFrame(update);
