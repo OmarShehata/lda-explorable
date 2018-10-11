@@ -95,7 +95,6 @@ class LinearDiscriminantAnalysis {
     // See also http://fourier.eng.hmc.edu/e161/lectures/algebra/node7.html
     let S = numeric.dot(numeric.inv(Sw),Sb); 
     let eigen = numeric.eig(S)
-    console.log(eigen)
 
     let evecs = []
     for(let i=0;i<eigen.E.x.length;i ++){

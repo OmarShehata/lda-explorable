@@ -473,13 +473,26 @@ function initDiagram3D(ID) {
 
 					for(let link of links) {
 						if(link.dataset.figure == ID) {
-							link.onclick = function() {
-								let lineToLink = JSON.parse(this.dataset.line);
-								let projectionPlane = lineToLink;
+							let lineToLink = JSON.parse(link.dataset.line);
+							let projectionPlane = lineToLink;
+							let targetQuaternion;
 
-								if(lineToLink.best) {
-									projectionPlane = computeBestProjection(csvData);
-								}
+							if(lineToLink.best) {
+								projectionPlane = computeBestProjection(csvData);
+								targetQuaternion = plot3d.getQuaternionFromBasis(projectionPlane)
+
+    							// To get the equation of the plane, I just need to transform the normal 
+    							// by the target quaternion 
+    							let normal = new THREE.Vector3(0, 1, 0);
+    							let transformMatrix = new THREE.Matrix4().compose(new THREE.Vector3(), targetQuaternion, new THREE.Vector3(1,1,1));
+    							normal = normal.applyMatrix4(transformMatrix).normalize();
+    							
+								link.innerHTML = `(${normal.x.toFixed(2)})x + (${normal.y.toFixed(2)})y + (${normal.z.toFixed(2)})z = 0`;
+							} else {
+								targetQuaternion = plot3d.getQuaternionFromBasis(projectionPlane);
+							}
+
+							link.onclick = function() {
 
 								let timeForTween = 1000;
 								let targetY = document.querySelector("#" + ID).offsetTop - 30
@@ -497,12 +510,11 @@ function initDiagram3D(ID) {
 
 								// Rotate the plane to the given projection 
 								timeForTween = 2000;
-								
-								let targetQuaternion = plot3d.getQuaternionFromBasis(projectionPlane);
 
 								let currentQuaternion = new THREE.Quaternion()
-								let scratch = new THREE.Vector3();
-    							plot3d.plane.matrix.decompose(scratch, currentQuaternion, scratch);
+								let position = new THREE.Vector3();
+								let scale = new THREE.Vector3();
+    							plot3d.plane.matrix.decompose(position, currentQuaternion, scale);
 
 					 			let tween2 = new TWEEN.Tween(currentQuaternion)
 										.to(targetQuaternion, timeForTween)

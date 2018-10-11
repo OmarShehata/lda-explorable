@@ -14,6 +14,7 @@
     <script src="src/LDA.js"></script>
     <script src="src/MathLibrary.js"></script>
     <script src="src/main.js"></script>
+    <meta charset="UTF-8"> 
 </head>
 <body>
 <div class="article">
@@ -55,16 +56,16 @@
 	<p>The reduced data is only 1 dimensional, but it captures the important insight of the higher dimensional view. Think again about prediction. If we're looking at the 1D view, all we have to do to predict whether a new point should be blue or red is just see whether it's on the right or left side. </p>
 	<p>This means that not only would our prediction algorithms perform just as good on the reduced data, it might even perform better! Strangely enough, by removing information, we've actually gained some insight. </p>
 	<h2>Higher Dimensions</h2>
-	<p>Reducing 2D data is easy, but usually not very useful. Let's go one dimension up and take a look at an example that we can still visualize.</p>
-	<p>Now we've got 3D data, this time with 3 classes, and we want to reduce it to 2D. The diagram below shows one such projection. </p>
+	<p>To build on this intuition, let's go one dimension up and look at an example that we can still visualize in its unreduced form.</p>
+	<p>Here we've got 3D data, this time with 3 classes, and we want to reduce it to 2D. The diagram below shows one such projection. </p>
 	<p>If you're using a keyboard, you can rotate the projection plane with W/S, A/D and Q/E.</p>
 	<div id="container-3d" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);">
 		<canvas id="projection-3d" class="figure"></canvas>
 		<div id="projection-3d-2d" class="figure"></div>
 		<div style="clear:both"></div>
 	</div>
-	<p>Again, there's an obvious pattern to the data in its original form that's lost in the reduced view. Finding the best projection plane by hand that retains this pattern is harder problem now because there's three degrees of motion for a plane in 3D compared to one for a line in 2D.</p>
-	<p>For this dataset, this best plane is <span class="projection-link" data-figure="projection-3d" data-line='{"best":true}'>x + y + z = 0</span>. Again, this best projection is what LDA can tell us.</p>
+	<p>Again, there's an obvious pattern to the data in its original form that's lost in the reduced view. Finding the best projection plane by hand that retains this pattern is a harder problem now because there's three degrees of motion for a plane in 3D compared to one for a line in 2D.</p>
+	<p>For this dataset, this best plane is <span class="projection-link" data-figure="projection-3d" data-line='{"best":true}'>x + y + z = 0</span>. Again, this best projection is what LDA allows us to find.</p>
 	<p>Now here's the real test. What if we had 4D data that we couldn't even visualize? Below is what it looks projected down to 2D.</p>
 	<p>INSERT GRAPH HERE</p>
 	<p>It looks as if there's no pattern here, and no hope of creating a good prediction algorithm. </p>
@@ -103,6 +104,11 @@
 	<p>Now is the real power. We can just as easily apply this onto the 4th dimensional example. Show some code, show the result. </p>
 	<p>And there it is. A beautiful hidden structure, buried in esoteric 4 dimensional space, previous unseeable, laid bare before our eyes.</p>
 	<p>Those are the leaps we make with mathematics. That is the power and joy.</p>
+	<!-- 
+		Say something about what the "linear" in LDA is all about. 
+
+		Consider a ring inside a ring. THere's no way to separate this. 
+	-->
 	<hr>
 	<div id="credit">
 		<p>Thanks to Professor Matt Richey for his amazing and inspiring lectures in the Algorithms for Decision Making class.</p>

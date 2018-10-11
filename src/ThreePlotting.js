@@ -97,7 +97,7 @@ class ThreePlotting {
     }
     newString += newPos.x.toFixed(2) + "," + newPos.y.toFixed(2) + "," + newPos.z.toFixed(2) + "," + c + '\n';
   	}
-    console.log(newString)
+    //console.log(newString)
 
   	this.originalData = processedData; 
   	this.classes = classes;
@@ -119,9 +119,9 @@ class ThreePlotting {
     let v2 = newBasis.v3;
     let v3 = newBasis.v2;
     
-    let xAxis = new THREE.Vector3(v1.x, v1.y, v1.z).normalize();
-    let yAxis = new THREE.Vector3(v2.x, v2.y, v2.z).normalize();
-    let zAxis = new THREE.Vector3(v3.x, v3.y, v2.z).normalize();
+    let xAxis = new THREE.Vector3(v1.x, v1.y, v1.z);
+    let yAxis = new THREE.Vector3(v2.x, v2.y, v2.z);
+    let zAxis = new THREE.Vector3(v3.x, v3.y, v3.z);
     
     M.makeBasis(xAxis, yAxis, zAxis)
 
