@@ -6,6 +6,7 @@
 	<script src="lib/two.min.js"></script>
     <script src="lib/Tween.js"></script>
     <script src="lib/papaparse.min.js"></script>
+    <script src="lib/versor.js"></script>
     <script src="lib/numbers.min.js"></script>
     <script src="lib/numeric-1.2.6.min.js"></script>
     <script src="lib/threejs/three.js"></script>
@@ -66,8 +67,21 @@
 	</div>
 	<p>Again, there's an obvious pattern to the data in its original form that's lost in the reduced view. Finding the best projection plane by hand that retains this pattern is a harder problem now because there's three degrees of motion for a plane in 3D compared to one for a line in 2D.</p>
 	<p>For this dataset, this best plane is <span class="projection-link" data-figure="projection-3d" data-line='{"best":true}'>x + y + z = 0</span>. Again, this best projection is what LDA allows us to find.</p>
-	<p>Now here's the real test. What if we had 4D data that we couldn't even visualize? Below is what it looks projected down to 2D.</p>
-	<p>INSERT GRAPH HERE</p>
+	<p>Now here's the real test. What if we had 4D data that we couldn't even visualize? Below is what it looks projected down to 2D, (this was done by first projecting it into 3D and then to 2D).</p>
+	<div id="container-4d" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);">
+		<div id="angles-4d" class="figure">
+			<ul>
+				<li>&alpha;<sub>XY</sub> &nbsp;= <input id="angle-xy" value="0"></input></li>
+				<li>&alpha;<sub>XZ</sub> &nbsp;= <input id="angle-xz" value="0"></input></li>
+				<li>&alpha;<sub>YZ</sub> &nbsp;= <input id="angle-yz" value="0"></input></li>
+				<li>&alpha;<sub>XW</sub> = <input id="angle-xw" value="0"></input></li>
+				<li>&alpha;<sub>YW</sub> = <input id="angle-yw" value="0"></input></li>
+				<li>&alpha;<sub>ZW</sub> = <input id="angle-zw" value="0"></input></li>
+			</ul>
+		</div>
+		<div id="projection-4d" class="figure"></div>
+		<div style="clear:both"></div>
+	</div>
 	<p>It looks as if there's no pattern here, and no hope of creating a good prediction algorithm. </p>
 	<!-- 
 	<p>Here is 4 dimensional data projected down to two. There are 6 degrees of motion. What we want is just like above, to find the projection that gives us the best separation in a lower dimension.</p>

@@ -232,61 +232,27 @@ class ThreePlotting {
 
   onDocumentKeyUp(event,that) {
   	let keyCode = event.which; 
-  	let keys = {'A':65,'D':68,'W':87,'S':83,'Q':81,'E':69};
+  	let keys = {'A':65,'D':68,'W':87,'S':83,'Q':81,'E':69,
+                'J':74,'L':76,'I':73,'K':75,'U':85,'O':79};
 
-  	if (keyCode == keys['A']) {
-  		that.isKeyPressed['A'] = false;
-  	}
-
-  	if (keyCode == keys['D']) {
-  		that.isKeyPressed['D'] = false;
-  	}
-
-  	if (keyCode == keys['W']) {
-  		that.isKeyPressed['W'] = false;
-  	}
-
-  	if (keyCode == keys['S']) {
-  		that.isKeyPressed['S'] = false;
-  	}
-
-  	if (keyCode == keys['Q']) {
-  		that.isKeyPressed['Q'] = false;
-  	}
-
-  	if (keyCode == keys['E']) {
-  		that.isKeyPressed['E'] = false;
-  	}
+    for(var key in keys) {
+      if(keyCode == keys[key]) {
+        that.isKeyPressed[key] = false;
+      }
+    }
 
   }
 
   onDocumentKeyDown(event,that) {
   	let keyCode = event.which; 
-  	let keys = {'A':65,'D':68,'W':87,'S':83,'Q':81,'E':69};
+  	let keys = {'A':65,'D':68,'W':87,'S':83,'Q':81,'E':69,
+                'J':74,'L':76,'I':73,'K':75,'U':85,'O':79};
 
-  	if (keyCode == keys['A']) {
-  		that.isKeyPressed['A'] = true;
-  	}
-
-  	if (keyCode == keys['D']) {
-  		that.isKeyPressed['D'] = true;
-  	}
-
-  	if (keyCode == keys['W']) {
-  		that.isKeyPressed['W'] = true;
-  	}
-
-  	if (keyCode == keys['S']) {
-  		that.isKeyPressed['S'] = true;
-  	}
-
-  	if (keyCode == keys['Q']) {
-  		that.isKeyPressed['Q'] = true;
-  	}
-
-  	if (keyCode == keys['E']) {
-  		that.isKeyPressed['E'] = true;
-  	}
+  	for(var key in keys) {
+      if(keyCode == keys[key]) {
+        that.isKeyPressed[key] = true;
+      }
+    }
 
   }
 

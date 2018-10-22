@@ -1,13 +1,10 @@
-* Use LDA to find best separation for 3D data
-* Create a link that you click on that gives you the best plane. 
-
-* Come up with 4D data.
-* Create a figure for it. Init 2D grid 
 * Create 2D projection, with a plane that rotates in 4 dimensions.
-* Show all 6 angles. 
+	* Make updateRotation function that runs when input changes or when you press on keyboard
+	* Make that function just apply a rotor, and store that somewhere
+	* Apply that rotor onto the basis, project data on that basis
+	* Get the inverse of that rotor ????
+
 * Use LDA to find separation for 4D data. Hide some good structure in it
 
 * Dynamic formula text with diagram. 
 * Put example on Colaboratory 
-
-* Add reference to LDA facial rec paper, as a link to the bottom, that takes you back up 

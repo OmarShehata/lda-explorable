@@ -7,6 +7,8 @@ let PURPLE = 'rgba(233, 88, 252,1)'
 let ProcessHandlers = {}
 let UpdateFunctions = []
 
+let plot3d;
+
 let MathLib = new MathLibrary();
 
 function initTwojs(id, width, height){
@@ -427,7 +429,7 @@ function initDiagram2D(ID) {
 
 function initDiagram3D(ID) {
 	let canvas = document.querySelector("#" + ID)
-	let plot3d = new ThreePlotting(canvas, 600, 600);
+	plot3d = new ThreePlotting(canvas, 600, 600);
 
 	let two = initTwojs('#'+ID+'-2d', 320, 320)
 	let gridMeta = makeSimple2D(two);
@@ -536,8 +538,250 @@ function initDiagram3D(ID) {
 			}
 		})
     });
+}
+
+function initDiagram4D(ID, anglesID) {
+	let two = initTwojs('#'+ ID, 320, 320)
+	let gridMeta = makeSimple2D(two);
+	let projectedPoints = [];
+	let data;
+
+	// Initialize the versor library so we can 
+	// describe rotations in 4D with Geometric Algebra
+	let E4 = versor.create({
+		metric:[1, 1, 1, 1],
+		types: [
+			{ name:"Rot", bases:["s", "e12", "e13", "e23", "e14", "e24", "e34"] },
+		]
+	});
+
+	let axes = ['xy','xz','yz','xw','yw','zw'];
+	let angles = {};
+	let finalRotor = E4.Rot(1, 0 , 0, 0, 0, 0, 0); 
+
+	for(let axis of axes) {
+		let spanName = 'angle-' + axis; 
+		let angle = document.querySelector('#' + spanName).value; 
+		let radians = (Math.PI/180) * angle;
+		let rotor = makeRotor(axis, radians);	
+
+		angles[axis] = Number(radians);	
+
+		finalRotor = finalRotor.gp(rotor);
+	}
+
+	function makeRotor(axis, angle) {
+		if(axis == 'xy') {
+			return E4.Rot(Math.cos(angle/2), Math.sin(angle/2), 0, 0, 0, 0, 0);
+		}
+		if(axis == 'xz') {
+			return E4.Rot(Math.cos(angle/2), 0, Math.sin(angle/2), 0, 0, 0, 0);
+		}
+		if(axis == 'yz') {
+			return E4.Rot(Math.cos(angle/2), 0, 0, Math.sin(angle/2), 0, 0, 0);
+		}
+		if(axis == 'xw') {
+			return E4.Rot(Math.cos(angle/2), 0, 0, 0, Math.sin(angle/2), 0, 0);
+		}
+		if(axis == 'yw') {
+			return E4.Rot(Math.cos(angle/2), 0, 0, 0, 0, Math.sin(angle/2), 0);
+		}
+		if(axis == 'zw') {
+			return E4.Rot(Math.cos(angle/2), 0, 0, 0, 0, 0, Math.sin(angle/2));
+		}
+	}
 
 	
+
+	function computeBestProjection(csvData){
+		// TODO
+		// let LDA = new LinearDiscriminantAnalysis(3);
+		// LDA.fit(csvData.data, csvData.classes)
+		// let scalings = LDA.getReducedScalings()
+		// return {
+		// 		v1:{x:scalings[0][0], y:scalings[0][1], z:scalings[0][2]},
+		// 		v2:{x:scalings[1][0], y:scalings[1][1], z:scalings[1][2]},
+		// 		v3:{x:scalings[2][0], y:scalings[2][1], z:scalings[2][2]}
+		// 	}
+	}
+
+	function getMatrixFromRotor(rotor) {
+		let v1 = E4.Vec(1,0,0,0);
+		let v2 = E4.Vec(0,1,0,0);
+		let v3 = E4.Vec(0,0,1,0);
+		let v4 = E4.Vec(0,0,0,1);
+
+		v1 = v1.sp(finalRotor);
+		v2 = v2.sp(finalRotor);
+		v3 = v3.sp(finalRotor);
+		v4 = v4.sp(finalRotor);
+
+		var m = new THREE.Matrix4();
+		m.set(
+			v1[0], v2[0], v3[0], v4[0],
+			v1[1], v2[1], v3[1], v4[1],
+			v1[2], v2[2], v3[2], v4[2],
+			v1[3], v2[3], v3[3], v4[3]
+			)
+		// m.set(
+		// 	v1[0], v1[1], v1[2], v1[3],
+		// 	v2[0], v2[1], v2[2], v2[3],
+		// 	v3[0], v3[1], v3[2], v3[3],
+		// 	v4[0], v4[1], v4[2], v4[3]
+		// 	)
+
+		return m;
+	}
+
+
+
+	function addToAngle(axis, val) {
+		angles[axis] += val;
+
+		// TODO: Clamp this to -180 to 180
+		let finalValue = Math.round(angles[axis] * (180/Math.PI));
+		document.querySelector("#angle-" + axis).value = finalValue;
+	}
+
+	UpdateFunctions.push(function(){
+		let speed = 0.04;
+		let changed = false;
+
+		if(plot3d.isKeyPressed['A']) {
+			addToAngle('xz', speed);
+			finalRotor = finalRotor.gp(makeRotor('xz', speed));
+			changed = true;
+		}
+		if(plot3d.isKeyPressed['D']) {
+			addToAngle('xz', -speed);
+			finalRotor = finalRotor.gp(makeRotor('xz', -speed));
+			changed = true;
+		}
+
+		if(plot3d.isKeyPressed['W']) {
+			addToAngle('yz', speed);
+			finalRotor = finalRotor.gp(makeRotor('yz', speed));
+			changed = true;
+		}
+		if(plot3d.isKeyPressed['S']) {
+			addToAngle('yz', -speed);
+			finalRotor = finalRotor.gp(makeRotor('yz', -speed));
+			changed = true;
+		}
+
+		if(plot3d.isKeyPressed['Q']) {
+			addToAngle('xy', speed);
+			finalRotor = finalRotor.gp(makeRotor('xy', speed));
+			changed = true;
+		}
+		if(plot3d.isKeyPressed['E']) {
+			addToAngle('xy', -speed);
+			finalRotor = finalRotor.gp(makeRotor('xy', -speed));
+			changed = true;
+		}
+
+		if(plot3d.isKeyPressed['J']) {
+			addToAngle('xw', speed);
+			finalRotor = finalRotor.gp(makeRotor('xw', speed));
+			changed = true;
+		}
+		if(plot3d.isKeyPressed['L']) {
+			addToAngle('xw', -speed);
+			finalRotor = finalRotor.gp(makeRotor('xw', -speed));
+			changed = true;
+		}
+
+		if(plot3d.isKeyPressed['I']) {
+			addToAngle('yw', speed);
+			finalRotor = finalRotor.gp(makeRotor('yw', speed));
+			changed = true;
+		}
+		if(plot3d.isKeyPressed['K']) {
+			addToAngle('yw', -speed);
+			finalRotor = finalRotor.gp(makeRotor('yw', -speed));
+			changed = true;
+		}
+
+		if(plot3d.isKeyPressed['U']) {
+			addToAngle('zw', speed);
+			finalRotor = finalRotor.gp(makeRotor('zw', speed));
+			changed = true;
+		}
+		if(plot3d.isKeyPressed['O']) {
+			addToAngle('zw', -speed);
+			finalRotor = finalRotor.gp(makeRotor('zw', -speed));
+			changed = true;
+		}
+
+
+		if(changed) {
+
+			updateProjection(finalRotor)
+		}
+
+		two.update();
+	})
+
+	function updateProjection(rotor) {
+		let csvData = data;
+		// My hyperplane is XZ to be consistent with the 3D example
+		basis = [
+			E4.Vec(1,0,0,0),
+			E4.Vec(0,0,1,0)
+		]
+
+		// Rotate plane by the given angles 
+		basis[0] = basis[0].sp(rotor);
+		basis[0].length = 4;
+
+		basis[1] = basis[1].sp(rotor);
+		basis[1].length = 4; // Since my project function expects an array
+		// this makes it act like one
+		
+		// Project onto our rotated basis
+		let newData = [];
+		let points2D = [];
+
+		let rotationMatrix = getMatrixFromRotor(rotor);
+		rotationMatrix = rotationMatrix.getInverse(rotationMatrix);
+
+		for(let datum of csvData.data){
+			let nDatum = MathLib.project(datum,basis)
+			newData.push(nDatum)	
+
+			// We need to rotate the data back, so we can 
+			// then just take the x and z and display them in 2D.
+			let vector = new THREE.Vector4(nDatum[0], nDatum[1], nDatum[2], nDatum[3]);
+			vector = vector.applyMatrix4(rotationMatrix);
+
+			points2D.push([vector.x, vector.z]);
+		}
+
+		// Clear previously plotted points 
+		for(let p of projectedPoints) {
+			two.remove(p);
+		}
+
+		projectedPoints = plotPoints(two, gridMeta, points2D, csvData.classes);
+	}
+
+	fetch("data/sample-4d.csv")
+    .then(res => res.blob())
+    .then(res => {
+    	Papa.parse(res, {
+			complete: function(results) {
+				ProcessHandlers['container-4d'] = function(results) {
+					let csvData = parseData(results)
+					//let header = csvData.header 
+					data = csvData;
+
+					updateProjection(finalRotor);
+				};
+
+				ProcessHandlers['container-4d'](results)
+			}
+		})
+    });
 }
 
 function dragOverHandler(ev) {
@@ -610,6 +854,8 @@ document.addEventListener("DOMContentLoaded", function() {
 	initDiagram2D('projection-2d-2');
 
 	initDiagram3D('projection-3d');
+
+	initDiagram4D('projection-4d', 'angles-4d');
 
 	function update(time){
 		requestAnimationFrame(update);

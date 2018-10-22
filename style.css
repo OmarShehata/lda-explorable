@@ -152,3 +152,37 @@ blockquote cite:before {
 	width: 50%;
 	height:100%;	
 }
+
+#angles-4d {
+	float:left;
+	display:inline-block;
+	width: 40%;
+	height:100%;
+}
+
+#angles-4d li {
+	list-style: none;
+	font-size:17px;
+	color: rgba(0, 0, 0, 0.6);
+}
+
+#angles-4d input {
+	border:none;
+	font-size:inherit;
+	color:inherit;
+	width: 60px;
+    text-align: center;
+}
+
+@media (min-width: 600px){
+	#angles-4d li {		
+		font-size:25px;
+	}
+}
+
+#projection-4d{
+	float:right;
+	display:inline-block;
+	width: 60%;
+	height:100%;	
+}
