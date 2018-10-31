@@ -561,13 +561,45 @@ function initDiagram4D(ID, anglesID) {
 
 	for(let axis of axes) {
 		let spanName = 'angle-' + axis; 
-		let angle = document.querySelector('#' + spanName).value; 
+		let inputTag = document.querySelector('#' + spanName);
+		let angle = inputTag.value; 
 		let radians = (Math.PI/180) * angle;
 		let rotor = makeRotor(axis, radians);	
 
 		angles[axis] = Number(radians);	
 
 		finalRotor = finalRotor.gp(rotor);
+
+		inputTag.axis = axis;
+		inputTag.savedValue = inputTag.value;
+		inputTag.onkeydown = function(e){
+			if(e.key == 'Enter') {
+				inputTag.onchange();
+				inputTag.blur();
+			}
+		}
+		inputTag.onchange = function(){
+			// Since we're not actually using Euler angles
+			// We can't actually "set" an angle
+			// but I can apply the difference in angles
+			// This does mean that setting it back to all 0's
+			// may not be the same as the original.
+			this.value = this.value.replace(/[^\d]/g, ''); // Remove non digits from input
+			let diff = (this.value - this.savedValue)
+			let radians = diff * Math.PI/180;
+			addToAngle(this.axis, radians);
+			finalRotor = finalRotor.gp(makeRotor(this.axis, radians));
+			updateProjection(finalRotor)
+		}	
+		
+		inputTag.onfocus = function(){
+			this.savedValue = this.value;
+			this.value = '';
+		}
+
+		inputTag.onblur = function(){
+			this.value = this.savedValue;
+		}
 	}
 
 	function makeRotor(axis, angle) {
@@ -640,7 +672,12 @@ function initDiagram4D(ID, anglesID) {
 
 		// TODO: Clamp this to -180 to 180
 		let finalValue = Math.round(angles[axis] * (180/Math.PI));
-		document.querySelector("#angle-" + axis).value = finalValue;
+		while(finalValue > 180) finalValue -= 360;
+		while(finalValue < -180) finalValue += 360;
+
+		let inputTag = document.querySelector("#angle-" + axis);
+		inputTag.value = finalValue;
+		inputTag.savedValue = inputTag.value;
 	}
 
 	UpdateFunctions.push(function(){
@@ -691,23 +728,23 @@ function initDiagram4D(ID, anglesID) {
 			changed = true;
 		}
 
-		if(plot3d.isKeyPressed['I']) {
+		if(plot3d.isKeyPressed['U']) {
 			addToAngle('yw', speed);
 			finalRotor = finalRotor.gp(makeRotor('yw', speed));
 			changed = true;
 		}
-		if(plot3d.isKeyPressed['K']) {
+		if(plot3d.isKeyPressed['O']) {
 			addToAngle('yw', -speed);
 			finalRotor = finalRotor.gp(makeRotor('yw', -speed));
 			changed = true;
 		}
 
-		if(plot3d.isKeyPressed['U']) {
+		if(plot3d.isKeyPressed['I']) {
 			addToAngle('zw', speed);
 			finalRotor = finalRotor.gp(makeRotor('zw', speed));
 			changed = true;
 		}
-		if(plot3d.isKeyPressed['O']) {
+		if(plot3d.isKeyPressed['K']) {
 			addToAngle('zw', -speed);
 			finalRotor = finalRotor.gp(makeRotor('zw', -speed));
 			changed = true;

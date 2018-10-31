@@ -1,10 +1,5 @@
-* Create 2D projection, with a plane that rotates in 4 dimensions.
-	* Make updateRotation function that runs when input changes or when you press on keyboard
-	* Make that function just apply a rotor, and store that somewhere
-	* Apply that rotor onto the basis, project data on that basis
-	* Get the inverse of that rotor ????
 
-* Use LDA to find separation for 4D data. Hide some good structure in it
-
-* Dynamic formula text with diagram. 
-* Put example on Colaboratory 
+* Create a static display of good/bad separations 
+* Create 2d projection figure to replace numbers in formula next to it 
+* Clean example on Colaboratory 
+	* Make it so they can do the 4d example themselves in Python, invite them to go back and find it in JS 

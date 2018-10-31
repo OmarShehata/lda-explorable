@@ -11,6 +11,14 @@
     <script src="lib/numeric-1.2.6.min.js"></script>
     <script src="lib/threejs/three.js"></script>
     <script src="lib/threejs/OrbitControls.js"></script>
+    <script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+});
+</script>
+	<script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML">
+</script>
     <script src="src/ThreePlotting.js"></script>
     <script src="src/LDA.js"></script>
     <script src="src/MathLibrary.js"></script>
@@ -67,7 +75,7 @@
 	</div>
 	<p>Again, there's an obvious pattern to the data in its original form that's lost in the reduced view. Finding the best projection plane by hand that retains this pattern is a harder problem now because there's three degrees of motion for a plane in 3D compared to one for a line in 2D.</p>
 	<p>For this dataset, this best plane is <span class="projection-link" data-figure="projection-3d" data-line='{"best":true}'>x + y + z = 0</span>. Again, this best projection is what LDA allows us to find.</p>
-	<p>Now here's the real test. What if we had 4D data that we couldn't even visualize? Below is what it looks projected down to 2D, (this was done by first projecting it into 3D and then to 2D).</p>
+	<p>Now here's the real test. What if we had 4D data that we couldn't even visualize? Below is what it looks projected down to 2D, (you can think of it as first projecting into 3D and then to 2D).</p>
 	<div id="container-4d" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);">
 		<div id="angles-4d" class="figure">
 			<ul>
@@ -75,7 +83,12 @@
 				<li>&alpha;<sub>XZ</sub> &nbsp;= <input id="angle-xz" value="0"></input></li>
 				<li>&alpha;<sub>YZ</sub> &nbsp;= <input id="angle-yz" value="0"></input></li>
 				<li>&alpha;<sub>XW</sub> = <input id="angle-xw" value="0"></input></li>
-				<li>&alpha;<sub>YW</sub> = <input id="angle-yw" value="0"></input></li>
+				<!-- 
+					The reason rotating along the YW has no visible effect is because
+					it's the same as rotating a line in 3D. One of the 3 rotations will be 
+					perpendicular to its axis, which doesn't change the line.
+				-->
+				<li style="display:none;">&alpha;<sub>YW</sub> = <input id="angle-yw" value="0"></input></li>
 				<li>&alpha;<sub>ZW</sub> = <input id="angle-zw" value="0"></input></li>
 			</ul>
 		</div>
@@ -83,29 +96,31 @@
 		<div style="clear:both"></div>
 	</div>
 	<p>It looks as if there's no pattern here, and no hope of creating a good prediction algorithm. </p>
-	<!-- 
-	<p>Here is 4 dimensional data projected down to two. There are 6 degrees of motion. What we want is just like above, to find the projection that gives us the best separation in a lower dimension.</p>
-	<p><i>One 2D view, with 6 angles on top, of a rotating plane that projects 4D points into 2D.</i></p>
-	<p>This one is much harder to do intuitively by hand. When our intuition fails, we look to mathematics to guide us.</p> -->
 	<h2>Devising an Algorithm</h2>
 	<p>The exciting part of mathematics, for me, is figuring out how to take a real world problem like that and phrase it in a way that our mathematical tools can tackle.</p>
 	<p>The first step is to recognize this as an optimization problem. We know it's an optimization problem because there exists a set of options, all one dimensional lines in the 2D case, and we're trying to find the best one.</p>
 	<p>But how do we know which one is the "best" ? We know intuitively because it gives us the best separation. So far we've been doing this visually. We need to precisely articulate this definition to solve it as an optimization problem. </p>
 	<p>This is really the fun part of mathematics. The rest is just details, implementation the solution. What sort of metric can you come up with that would give you a high number for these cases:</p>
-	<p><i>Show 2D and 1D projections with good separation</i></p>
+	<div id="good-separation" class="figure"></div>
 	<p>Compared to these cases</p>
-	<p><i>Show 2D and 1D projections with BAD separation</i></p>
+	<div id="bad-separation" class="figure"></div>
 	<p>As a simple example of a metric, you could say it's the absolute distance between the means of the two classes. That would certainly work above, but not when the data is so spread out:</p>
-	<p><i>Show 2D and 1D projections with very high variance</i></p>
+	<div id="high-variance" class="figure"></div>
 	<p>Pretend like it's the 1930's and this hasn't been solved yet. Give it some thought, what would you come up with?</p>
 	<hr>
 	<p>If you came up with a solution that took into account both the means and the variance (spread), then give yourself a pat on the back. This is exactly what Ronald Fisher came up with 1936.</p>
 	<!--  Add something about Fisher's personality? How not to be wrong made it fun -->
 	<p>The exact formula he came up with is:</p>
-	<p>(U_1 - U_2)^2 / S_1 + S_2</p>
-	<p>Where S_i is the scatter. It's a measure of how spread out the data is. So we want to maximize this function, which means we want the biggest distance between the means, but also the smallest scatter.</p>
+	<p>$$\frac{(\mu_1 - \mu_2)^2}{S_1 + S_2}$$</p>
+	<p>Where $S_i$ is the scatter and is defined as $S_i = \sum_{y\in w_i} (y - \mu_i)^2$. It's a measure of how spread out the data is. So we want to maximize this function, which means we want the biggest distance between the means, but also the smallest scatter.</p>
 	<p>To see how it works, it always helps to see an example. Here's the function computed for a particular example. Move it to see how it changes for different projections.</p>
-	<p><i>Put formula next to 2D example projected down.</i></p>
+	<div id="container-formula" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);">
+		<div id="fisher-formula" class="figure">
+			<p>$$\frac{(\mu_1 - \mu_2)^2}{S_1 + S_2}$$</p>
+		</div>
+		<div id="projection-fisher" class="figure"></div>
+		<div style="clear:both"></div>
+	</div>
 	<p>You can see how this (LINK) produces bad separation, and is thus a low number, an this (LINK) produces good separation and is thus a higher number.</p>
 	<p>Notice that both cases there actually have the same mean distances to each other, which is why it's not sufficient just to use that as a metric. </p>
 	<p>Now this isn't the only way to do it, and I encourage you to test out any different methods you came up with. That is the joy of maths. If you come up with something, publish it! </p>
@@ -134,6 +149,8 @@
 	var wordCount = document.querySelector(".article").textContent.split(" ").length;
 	var minutes = Math.round(wordCount / 200);
 	document.querySelector("#minutes_read").innerHTML = String(minutes);
+
+	
 </script>
 </body>
 </html>
