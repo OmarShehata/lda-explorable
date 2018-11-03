@@ -153,7 +153,7 @@ blockquote cite:before {
 	height:100%;	
 }
 
-#angles-4d {
+.figure-left {
 	float:left;
 	display:inline-block;
 	width: 40%;
@@ -180,9 +180,14 @@ blockquote cite:before {
 	}
 }
 
-#projection-4d{
+.figure-right {
 	float:right;
 	display:inline-block;
 	width: 60%;
 	height:100%;	
+}
+
+#container-formula {
+	display: flex;
+    align-items: center;
 }

@@ -26,20 +26,24 @@ function initTwojs(id, width, height){
     return two;
 }
 
-function make2DAxes(x,y, canvas, size, lWidth, gLines){
+function make2DAxes(x,y, canvas, size, lWidth, gLines, skipAxes){
 	let lineColor = "rgba(0, 0, 0, 1)";
 	let lineWidth = lWidth || 2;
 	let gridSize = size || 200;
 	let gridLines = gLines || 10;
 	let origin = {x:x+gridSize/2,y:y-gridSize/2};
 
-	let line = canvas.makeLine(origin.x, y, x+ gridSize/2, y - gridSize);
-	line.linewidth = lineWidth;
-	line.stroke = lineColor;
+	let line;
 
-	line = canvas.makeLine(x, origin.y, x + gridSize, y - gridSize/2);
-	line.linewidth = lineWidth;
-	line.stroke = lineColor;
+	if(!skipAxes) {
+		line = canvas.makeLine(origin.x, y, x+ gridSize/2, y - gridSize);
+		line.linewidth = lineWidth;
+		line.stroke = lineColor;
+
+		line = canvas.makeLine(x, origin.y, x + gridSize, y - gridSize/2);
+		line.linewidth = lineWidth;
+		line.stroke = lineColor;
+	}
 
 	// Make grid 
 	let spacing = Math.round(gridSize/gridLines);
@@ -63,6 +67,8 @@ function make2DAxes(x,y, canvas, size, lWidth, gLines){
 function plotPoints(canvas, gridMeta, points, classes){
 	let radius = 5;
 	let circles = [];
+	let classID = 0;
+	let classTable = {};
 
 	for(let p of points){
 		let circle = canvas.makeCircle(0,0,radius);
@@ -71,6 +77,11 @@ function plotPoints(canvas, gridMeta, points, classes){
 
 		circle.meta = gridMeta
 		circle.data = p;
+		if(classTable[classes[circles.length]] == undefined) {
+			classTable[classes[circles.length]] = classID;
+			classID++;
+		}
+		circle.class = classTable[classes[circles.length]];
 		circle.convertToWorldCoordinates = function(data){
 			let final = [];
 			final.push(data[0] * gridMeta.spacing + gridMeta.origin.x);
@@ -87,31 +98,72 @@ function plotPoints(canvas, gridMeta, points, classes){
 	return circles;
 }
 
-function makeSimple2D(canvas) {
+function makeSimple2D(canvas, skipAxes) {
 	let two = canvas; 
 
 	let gridX = 35;
 	let gridY = 265;
-	let gridMeta = make2DAxes(gridX,gridY,two, 240, 1, 16);
+	let gridMeta = make2DAxes(gridX,gridY,two, 240, 1, 16, skipAxes);
 
 	two.renderer.domElement.style['pointer-events'] = 'none';
 
 	return gridMeta;
 }
 
-function make2DProjectionDiagram(canvas){
-	let two = canvas; 
+function makeProjectionLine(two, gridMeta) {
+	let gridX = gridMeta.origin.x - gridMeta.size/2; 
+	let gridY = gridMeta.origin.y + gridMeta.size/2; 
 
-	let gridX = 90;
-	let gridY = 210;
-	let gridMeta = make2DAxes(gridX,gridY,two);
+	let projectionLine = two.makeLine(gridX-20, gridY - gridMeta.size/2, gridX + gridMeta.size + 20, gridY - gridMeta.size/2);
+	projectionLine.stroke = 'rgba(244, 185, 95, 1)'
+	projectionLine.updateAngle = function(vector, normalized){
+		let x = vector[0]
+		let y = vector[1]
+		if(!normalized){
+			let dx = x - gridMeta.origin.x;
+			let dy = y - gridMeta.origin.y; 
+			let dist = Math.sqrt(dx * dx + dy * dy);
+			dx /= dist; 
+			dy /= dist;
+			x = dx; 
+			y = dy;
+		} 
+		
+		projectionLine.vertices[0].set(x * 120, y * 120)
+		projectionLine.vertices[1].set(-x * 120, -y * 120)
+
+		return [x,y]
+	}
+
+	two.update();
+
+	projectionLine._renderer.elem.style['stroke-dasharray'] = 2
+	projectionLine.linewidth = 3;	
+
+	return projectionLine;
+}
+
+function make2DProjectionDiagram(canvas, options){
+	let two = canvas; 
+	if(options == undefined) {
+		options = {};
+	}
+
+	gridX = options.gridX || 90;
+	gridY = options.gridY || 210;
+	let gridMeta = make2DAxes(gridX,gridY,two, options.size, options.lWidth, options.gLines);
 
 	let xOffset = 300;
 	var x = gridX + xOffset;
 	var y = gridY - 100;
-	let line = two.makeLine(x, y, x + 200, y);
-	line.stroke = 'rgba(0,0,0,1)'
-	line.linewidth = 2;
+
+	let line; 
+	if(!options.skip1D) {
+		line = two.makeLine(x, y, x + 200, y);
+		line.stroke = 'rgba(0,0,0,1)'
+		line.linewidth = 2;	
+	}
+	
 
 	let defaultData = [[0,0],[1,1],[-3,5],[2,-4],[-2,-2]]
 	let defaultClasses = [RED,BLUE, BLUE,RED, RED]
@@ -147,8 +199,11 @@ function make2DProjectionDiagram(canvas){
 			nDatum[0] /= projectionBasis[0][0]
 			newData.push(nDatum)	
 		}
-		// Plot projection
-		points1D = plotPoints(two, {size:gridMeta.size,spacing:gridMeta.spacing,origin:{x:x+gridMeta.size/2,y:y}} , newData, classes)
+
+		if(!options.skip1D) {
+			// Plot projection
+			points1D = plotPoints(two, {size:gridMeta.size,spacing:gridMeta.spacing,origin:{x:x+gridMeta.size/2,y:y}} , newData, classes)
+		}
 
 		// Tween points to their projected positions 
 		for(let i=0;i<points2D.length;i++){
@@ -156,6 +211,7 @@ function make2DProjectionDiagram(canvas){
 			let nDatum = MathLib.project(point.data, projectionBasis)
 			let newCoords = point.convertToWorldCoordinates(nDatum)
 			let projected = {x:newCoords[0], y: newCoords[1]}  //{x: points1D[i].translation.x - xOffset, y: points1D[i].translation.y}
+			point.projectedValue = newCoords[0] / projectionBasis[0][0];
 
 			point.setTween = function(target, animate){
 				this.tween = new TWEEN.Tween(this.translation)
@@ -180,6 +236,7 @@ function make2DProjectionDiagram(canvas){
 			}
 
 			point.setTween(projected)
+		
 		}
 	}
 
@@ -196,31 +253,9 @@ function make2DProjectionDiagram(canvas){
 	origin.stroke = 'none';
 	
 	// Projection line 
-	let projectionLine = two.makeLine(gridX-20, gridY - gridMeta.size/2, gridX + gridMeta.size + 20, gridY - gridMeta.size/2);
-	projectionLine.stroke = 'rgba(244, 185, 95, 1)'
-	projectionLine.updateAngle = function(vector, normalized){
-		let x = vector[0]
-		let y = vector[1]
-		if(!normalized){
-			let dx = x - gridMeta.origin.x;
-			let dy = y - gridMeta.origin.y; 
-			let dist = Math.sqrt(dx * dx + dy * dy);
-			dx /= dist; 
-			dy /= dist;
-			x = dx; 
-			y = dy;
-		} 
-		
-		projectionLine.vertices[0].set(x * 120, y * 120)
-		projectionLine.vertices[1].set(-x * 120, -y * 120)
-
-		return [x,y]
-	}
+	let projectionLine = makeProjectionLine(two, gridMeta);
 	projectionLine.updateAngle(projectionBasis[0], true)
-	two.update();
-
-	projectionLine._renderer.elem.style['stroke-dasharray'] = 2
-	projectionLine.linewidth = 3;	
+	
 	xText._renderer.elem.style['user-select'] = 'none';
 	yText._renderer.elem.style['user-select'] = 'none';
 
@@ -231,29 +266,34 @@ function make2DProjectionDiagram(canvas){
 		return this.matrixTransform(two.renderer.domElement.getScreenCTM().inverse())
 	}
 	
-	let isTouching = false;
-	let mousePos = {x:0,y:0};
+	let mouseData = {
+		isTouching : false, 
+		mousePos : {
+			x : 0,
+			y : 0
+		}
+	};
 
 	function mouseDown(e){
-		isTouching = true;
+		mouseData.isTouching = true;
 	}
 	function mouseUp(e){
-		isTouching = false;
+		mouseData.isTouching = false;
 	}
 	function touchStart(e){
-		mousePos.x = e.touches[0].clientX; 
-		mousePos.y = e.touches[0].clientY;
-		isTouching = true;
+		mouseData.mousePos.x = e.touches[0].clientX; 
+		mouseData.mousePos.y = e.touches[0].clientY;
+		mouseData.isTouching = true;
 	}
 	function touchEnd(e){
-		isTouching = false;
+		mouseData.isTouching = false;
 	}
 	function touchCancel(e){
-		isTouching = false;
+		mouseData.isTouching = false;
 	}
 	function mouseMove(e){
-		mousePos.x = e.clientX; 
-		mousePos.y = e.clientY;
+		mouseData.mousePos.x = e.clientX; 
+		mouseData.mousePos.y = e.clientY;
 	}
 
 	let element = two.renderer.domElement.parentNode;
@@ -278,14 +318,19 @@ function make2DProjectionDiagram(canvas){
 			// Re-project
 			projectionBasis = [vector]
 			let newProjection = MathLib.project(p.data, projectionBasis)
-			let newCoords = points1D[i].convertToWorldCoordinates(newProjection)
+
+			let newCoords = p.convertToWorldCoordinates(newProjection)
 			// Create new tween
-			p.setTween({x: newCoords[0] - xOffset, y: newCoords[1] }, animate) 
+			p.setTween({x: newCoords[0] , y: newCoords[1] }, animate) 
+			p.projectedValue = newProjection[0] / vector[0];
 			// Divide (x,y) by the basis (it must be a scalar multiple) to get the new (x,0) coordinate 
 			newProjection[0] = newProjection[0] / vector[0]
 			// update points1D
-			newCoords = points1D[i].convertToWorldCoordinates([newProjection[0],0])
-			points1D[i].translation.x = newCoords[0]
+			if(!options.skip1D) {
+				newCoords = points1D[i].convertToWorldCoordinates([newProjection[0],0])
+				points1D[i].translation.x = newCoords[0]	
+			}
+			
 		}
 	}
 
@@ -300,18 +345,23 @@ function make2DProjectionDiagram(canvas){
 		return {x:scalings[0][0], y:scalings[0][1]}
 	}
 
+	function getPoints2D(){
+		return points2D;
+	}
+
 
 	UpdateFunctions.push(function(){
 		two.update();
 
-		if(isTouching){
-			let newMouse = cPoint.getDOMCoordinates(mousePos.x, mousePos.y)
+		if(mouseData.isTouching){
+			let newMouse = cPoint.getDOMCoordinates(mouseData.mousePos.x, mouseData.mousePos.y)
 
 			updateProjection([newMouse.x, newMouse.y], null, true)
 		}
 	})
 
-	return {computeBestProjection:computeBestProjection ,updateData:updateData, updateLabels: updateLabels, updateProjection: updateProjection, getProjectionBasis: getProjectionBasis};
+	return {computeBestProjection:computeBestProjection ,updateData:updateData, updateLabels: updateLabels, updateProjection: updateProjection, getProjectionBasis: getProjectionBasis,
+		mouseData:mouseData, getPoints2D: getPoints2D};
 }
 
 function parseData(papaResults){
@@ -821,6 +871,252 @@ function initDiagram4D(ID, anglesID) {
     });
 }
 
+function initStaticDiagram(ID, plotType){
+	let two = initTwojs('#'+ID)
+	let gridMeta = makeSimple2D(two, true);
+
+	let data = [[-2.7,2.5],[-3.5,1.3],[-3.6,-2.2], [-4.2,3.6],[-5,-1],
+				[3.2,0.6],[2,-1.4], [2.2, 1], [3.6, -2], [5, -1.5]]
+	let classes = [RED, RED, RED, RED, RED,
+				  BLUE, BLUE, BLUE, BLUE, BLUE]
+
+	let projectionLine = makeProjectionLine(two, gridMeta);
+	projectionLine.stroke = 'rgba(0, 0, 0, 0.25)';
+
+	function plotGoodSeperation() {
+		projectionLine.updateAngle([1, 0], true)
+
+		let x = gridMeta.origin.x + 200;
+		let y = gridMeta.origin.y;
+		let line = two.makeLine(x, y, x + 250, y);
+		line.stroke = 'rgba(0,0,0,1)'
+
+		plotPoints(two, gridMeta, data, classes)
+
+		// Simple projection by dropping one axis
+		let newGridMeta = {
+			size: gridMeta.size, 
+			spacing: gridMeta.spacing, 
+			origin: {x: x + gridMeta.size/2, y: y}
+		};
+		let newData = [];
+		for(let point of data) {
+			newData.push([point[0], 0])
+		}
+		plotPoints(two, newGridMeta , newData, classes)
+	}
+
+	function plotBadSeparation() {
+		projectionLine.updateAngle([0, 1], true)
+
+		let x = gridMeta.origin.x + 300;
+		let y = gridMeta.origin.y - 110;
+		let line = two.makeLine(x, y, x, y + 200);
+		line.stroke = 'rgba(0,0,0,1)'
+
+		plotPoints(two, gridMeta, data, classes);
+
+		// Simple projection by dropping one axis
+		let newGridMeta = {
+			size: gridMeta.size, 
+			spacing: gridMeta.spacing, 
+			origin: {x: x, y: y + 100}
+		};
+		let newData = [];
+		for(let point of data) {
+			newData.push([0, point[1]])
+		}
+		plotPoints(two, newGridMeta , newData, classes)
+	}
+
+	function plotHighVariance() {
+		projectionLine.updateAngle([1, 0], true)
+
+		fetch("data/sample-high-variance.csv")
+	    .then(res => res.blob())
+	    .then(res => {
+	    	Papa.parse(res, {
+				complete: function(results) {
+					let csvData = parseData(results)
+					let dataVariance = csvData.data;
+					let classesVariance = csvData.classes;
+
+					let x = gridMeta.origin.x + 200;
+					let y = gridMeta.origin.y;
+					let line = two.makeLine(x, y, x + 250, y);
+					line.stroke = 'rgba(0,0,0,1)'
+
+					plotPoints(two, gridMeta, dataVariance, classesVariance)
+
+					// Simple projection by dropping one axis
+					let newGridMeta = {
+						size: gridMeta.size, 
+						spacing: gridMeta.spacing, 
+						origin: {x: x + gridMeta.size/2, y: y}
+					};
+					let newData = [];
+					for(let point of dataVariance) {
+						newData.push([point[0], 0])
+					}
+
+					plotPoints(two, newGridMeta , newData, classesVariance)					
+				}
+			})
+	    });
+
+		
+	}
+
+	if(plotType == 'good') {
+		plotGoodSeperation();	
+	}
+	else if(plotType == 'bad') {
+		plotBadSeparation();
+	}
+	else if(plotType == 'variance') {
+		plotHighVariance();
+	}
+	
+	
+	UpdateFunctions.push(function(){
+		two.update();
+	})
+}
+
+function initFormulaDiagram(ID) {
+	let two = initTwojs('#'+ ID, 320, 320)
+
+
+	let diagram;
+
+	fetch("data/sample-high-variance.csv")
+    .then(res => res.blob())
+    .then(res => {
+    	Papa.parse(res, {
+			complete: function(results) {
+				diagram = make2DProjectionDiagram(two, {
+					size: 240, 
+					gridX: 40, 
+					gridY: 250,
+					lWidth: 1,
+					gLines : 16,
+					skip1D : true
+				});
+
+				ProcessHandlers[ID] = function(results) {
+					let csvData = parseData(results)
+					let header = csvData.header 
+
+					// TODO: Count number of classes, if it's more than 2, 
+					// display a message rejecting this dataset 
+
+					diagram.updateLabels('','');
+					diagram.updateData(csvData.data, csvData.classes);
+
+				};
+
+				ProcessHandlers[ID](results)
+			}
+		})
+    });	
+
+    let numbersOn = false;
+    function mathJaxNumber(num) {
+		return `<span class="mjx-char MJXc-TeX-main-R" style="padding-top: 0.4em; padding-bottom: 0.356em; font-size: 20px;">${num}</span>`;
+	}
+	let nodes = {
+		'u1': '#MJXc-Node-58',
+		'u2': '#MJXc-Node-62',
+		's1': '#MJXc-Node-69',
+		's2': '#MJXc-Node-73',
+		'result' : '#MJXc-Node-77',
+	}
+	let precision = {
+		'u1' : 1,
+		'u2' : 1,
+		's1' : 0,
+		's2' : 0,
+		'result' : 3
+	}
+	let originalLatex = {};
+
+    UpdateFunctions.push(function(){
+		if (diagram) {
+			if (diagram.mouseData.isTouching && !numbersOn) {
+				numbersOn = true;
+				let math = MathJax.Hub.getAllJax("fisher-formula")[0];
+				if (math) {
+					// Save the original equation
+					for(let n in nodes) {
+						originalLatex[n] = document.querySelector(nodes[n]).innerHTML;
+					}
+				}
+			}
+
+			if(numbersOn) {
+				if(!diagram.mouseData.isTouching) {
+					numbersOn = false;
+					let math = MathJax.Hub.getAllJax("fisher-formula")[0];
+					if (math) {
+						// Reset back to the original equatio
+						for(let n in nodes) {
+							document.querySelector(nodes[n]).innerHTML = originalLatex[n];
+						}
+
+					}
+				} else {
+					
+					let points2D = diagram.getPoints2D();
+					// Here I assume there's only two classes
+					let r = {};
+					let u1Count = 0;
+					let u2Count = 0;
+					r['u1'] = 0;
+					r['u2']= 0;
+					r['s1'] = 0
+					r['s2'] = 0;
+					// Compute mean 
+					for(let p of points2D) {
+						let pClass = p.class; 
+						
+						if (pClass == 0) {
+							r['u1'] += p.projectedValue;
+							u1Count ++;
+						}
+						if (pClass == 1) {
+							r['u2'] += p.projectedValue;
+							u2Count ++;
+						}
+					}
+					r['u1'] /= u1Count;
+					r['u2'] /= u2Count;
+
+					// Compute scatter 
+					for(let p of points2D) {
+						let pClass = p.class; 
+						
+						if (pClass == 0) {
+							r['s1'] += Math.pow(p.projectedValue - r['u1'], 2);
+						}
+						if (pClass == 1) {
+							r['s2'] += Math.pow(p.projectedValue - r['u2'], 2);
+						}
+					}
+
+					// Replace symbols with numbers 
+					r['result'] = Math.pow(r['u1'] - r['u2'],2) / (r['s1'] + r['s2']);
+
+					for(let n in nodes) {
+						document.querySelector(nodes[n]).innerHTML = mathJaxNumber(r[n].toFixed(precision[n]));
+					}
+				}
+			}
+
+			
+		}
+	})
+}
+
 function dragOverHandler(ev) {
 	if(!ev.currentTarget.classList.contains('highlight')){
 		ev.currentTarget.classList.toggle('highlight')
@@ -893,6 +1189,12 @@ document.addEventListener("DOMContentLoaded", function() {
 	initDiagram3D('projection-3d');
 
 	initDiagram4D('projection-4d', 'angles-4d');
+
+	initStaticDiagram('good-separation', 'good');
+	initStaticDiagram('bad-separation', 'bad');
+	initStaticDiagram('high-variance', 'variance');
+
+	initFormulaDiagram('projection-fisher');
 
 	function update(time){
 		requestAnimationFrame(update);

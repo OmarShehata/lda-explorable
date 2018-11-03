@@ -77,7 +77,7 @@ MathJax.Hub.Config({
 	<p>For this dataset, this best plane is <span class="projection-link" data-figure="projection-3d" data-line='{"best":true}'>x + y + z = 0</span>. Again, this best projection is what LDA allows us to find.</p>
 	<p>Now here's the real test. What if we had 4D data that we couldn't even visualize? Below is what it looks projected down to 2D, (you can think of it as first projecting into 3D and then to 2D).</p>
 	<div id="container-4d" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);">
-		<div id="angles-4d" class="figure">
+		<div id="angles-4d" class="figure figure-left">
 			<ul>
 				<li>&alpha;<sub>XY</sub> &nbsp;= <input id="angle-xy" value="0"></input></li>
 				<li>&alpha;<sub>XZ</sub> &nbsp;= <input id="angle-xz" value="0"></input></li>
@@ -92,7 +92,7 @@ MathJax.Hub.Config({
 				<li>&alpha;<sub>ZW</sub> = <input id="angle-zw" value="0"></input></li>
 			</ul>
 		</div>
-		<div id="projection-4d" class="figure"></div>
+		<div id="projection-4d" class="figure figure-right"></div>
 		<div style="clear:both"></div>
 	</div>
 	<p>It looks as if there's no pattern here, and no hope of creating a good prediction algorithm. </p>
@@ -100,10 +100,10 @@ MathJax.Hub.Config({
 	<p>The exciting part of mathematics, for me, is figuring out how to take a real world problem like that and phrase it in a way that our mathematical tools can tackle.</p>
 	<p>The first step is to recognize this as an optimization problem. We know it's an optimization problem because there exists a set of options, all one dimensional lines in the 2D case, and we're trying to find the best one.</p>
 	<p>But how do we know which one is the "best" ? We know intuitively because it gives us the best separation. So far we've been doing this visually. We need to precisely articulate this definition to solve it as an optimization problem. </p>
-	<p>This is really the fun part of mathematics. The rest is just details, implementation the solution. What sort of metric can you come up with that would give you a high number for these cases:</p>
-	<div id="good-separation" class="figure"></div>
-	<p>Compared to these cases</p>
+	<p>This is really the fun part of mathematics. The rest is just details, implementation the solution. What sort of metric can you come up with that would give you a low number for this projection:</p>
 	<div id="bad-separation" class="figure"></div>
+	<p>Compared to this projection</p>
+	<div id="good-separation" class="figure"></div>
 	<p>As a simple example of a metric, you could say it's the absolute distance between the means of the two classes. That would certainly work above, but not when the data is so spread out:</p>
 	<div id="high-variance" class="figure"></div>
 	<p>Pretend like it's the 1930's and this hasn't been solved yet. Give it some thought, what would you come up with?</p>
@@ -115,13 +115,13 @@ MathJax.Hub.Config({
 	<p>Where $S_i$ is the scatter and is defined as $S_i = \sum_{y\in w_i} (y - \mu_i)^2$. It's a measure of how spread out the data is. So we want to maximize this function, which means we want the biggest distance between the means, but also the smallest scatter.</p>
 	<p>To see how it works, it always helps to see an example. Here's the function computed for a particular example. Move it to see how it changes for different projections.</p>
 	<div id="container-formula" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);">
-		<div id="fisher-formula" class="figure">
-			<p>$$\frac{(\mu_1 - \mu_2)^2}{S_1 + S_2}$$</p>
+		<div id="fisher-formula" class="figure figure-left">
+			<p>$$\frac{(\mu_1 - \mu_2)^2}{S_1 + S_2} = x$$</p>
 		</div>
-		<div id="projection-fisher" class="figure"></div>
+		<div id="projection-fisher" class="figure figure-right"></div>
 		<div style="clear:both"></div>
 	</div>
-	<p>You can see how this (LINK) produces bad separation, and is thus a low number, an this (LINK) produces good separation and is thus a higher number.</p>
+	<p>You can see how this (LINK) produces bad separation, and is thus a low number, and this (LINK) produces good separation and is thus a higher number.</p>
 	<p>Notice that both cases there actually have the same mean distances to each other, which is why it's not sufficient just to use that as a metric. </p>
 	<p>Now this isn't the only way to do it, and I encourage you to test out any different methods you came up with. That is the joy of maths. If you come up with something, publish it! </p>
 	<h2>Implementation Details</h2>

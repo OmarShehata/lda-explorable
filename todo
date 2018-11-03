@@ -1,5 +1,3 @@
 
-* Create a static display of good/bad separations 
-* Create 2d projection figure to replace numbers in formula next to it 
 * Clean example on Colaboratory 
 	* Make it so they can do the 4d example themselves in Python, invite them to go back and find it in JS 
