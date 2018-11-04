@@ -33,9 +33,9 @@ MathJax.Hub.Config({
 	<p class="centered-text faded-text subtitle">
 		Omar Shehata &mdash; St. Olaf College &mdash; 2018
 	</p>
-	<p class="centered-text faded-text">
+	<!-- <p class="centered-text faded-text">
 		<i>(<span id="minutes_read"></span> min read)</i>
-	</p>
+	</p> -->
 	<!-- 
 	Sources: https://sebastianraschka.com/Articles/2014_python_lda.html#%E2%80%93-bit-by-bit
 	-->
@@ -52,7 +52,7 @@ MathJax.Hub.Config({
 	<h2>The Premise</h2>
 	<p>You're given high dimensional data and you're trying to reduce it. This need not be anything esoteric. It could be data about houses on the market with price, age, size, distance to public transport and number of rooms. That's already 5 dimensions &mdash; too many to visualize all at once.</p>
 	<p>Like any good mathematician, you can start with a simple approach and explore its consequences. What happens if you just drop one of the dimensions?</p>
-	<p>Let's see what this looks like in a simple case. Here is some made up data about houses that's only in 2 dimensions. Blue dots could be houses that were sold and red ones are still looking for a buyer.</p>
+	<p>Let's see what this looks like. Here is some made up data about houses that's only in 2 dimensions. Blue dots could be houses that were sold and red ones are still looking for a buyer.</p>
 	<div id="projection-2d" class="figure" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);" data-initial-line='{"x":1, "y":0.001}'></div>
 	<p>The graph on the left is the original data, and the line on the right is what it would look like after we drop it 1 dimension by just ignoring the Y axis.</p>
 	<p>We've succesfully reduced our data, but remember that our goal is to reduce it without losing information. In this case, you can easily tell that there is a pattern to the data when looking at the 2D view. This pattern is completely lost in the 1D view.</p>	
@@ -148,7 +148,7 @@ MathJax.Hub.Config({
 	// Compute how many minutes to read 
 	var wordCount = document.querySelector(".article").textContent.split(" ").length;
 	var minutes = Math.round(wordCount / 200);
-	document.querySelector("#minutes_read").innerHTML = String(minutes);
+	//document.querySelector("#minutes_read").innerHTML = String(minutes);
 
 	
 </script>

@@ -106,7 +106,7 @@ class LinearDiscriminantAnalysis {
     }
 
   	// Sort eigenvectors by eigenvalues 
-    evecs.sort(function(a,b){ return a.value < b.value })
+    evecs.sort(function(a,b){ return b.value - a.value })
 
   	this.scalings = [];
     for(let v of evecs){
