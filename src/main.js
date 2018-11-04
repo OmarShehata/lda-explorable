@@ -1003,7 +1003,7 @@ function initFormulaDiagram(ID) {
 					skip1D : true
 				});
 
-				ProcessHandlers[ID] = function(results) {
+				ProcessHandlers['container-formula'] = function(results) {
 					let csvData = parseData(results)
 					let header = csvData.header 
 
@@ -1015,7 +1015,7 @@ function initFormulaDiagram(ID) {
 
 				};
 
-				ProcessHandlers[ID](results)
+				ProcessHandlers['container-formula'](results)
 			}
 		})
     });	
@@ -1029,7 +1029,11 @@ function initFormulaDiagram(ID) {
 		'u2': '#MJXc-Node-62',
 		's1': '#MJXc-Node-69',
 		's2': '#MJXc-Node-73',
-		'result' : '#MJXc-Node-77',
+		'result_fraction' : '#MJXc-Node-77',
+		'numerator' : '#MJXc-Node-78',
+		'denominator' : '#MJXc-Node-79',
+		'equal' :  '#MJXc-Node-76',
+		'result' : '#MJXc-Node-81'
 	}
 	let precision = {
 		'u1' : 1,
@@ -1040,6 +1044,27 @@ function initFormulaDiagram(ID) {
 	}
 	let originalLatex = {};
 
+	let resultFractionDiv;
+	let equalDiv;
+	let numeratorDiv;
+	let denominatorDiv;
+
+	MathJax.Hub.Startup.signal.Interest(
+		function (message) {
+			if(message == 'End') {
+				resultFractionDiv = document.querySelector(nodes['result_fraction']);
+				equalDiv = document.querySelector(nodes['equal']);
+				numeratorDiv = document.querySelector(nodes['numerator']);
+				denominatorDiv = document.querySelector(nodes['denominator']);
+
+
+				resultFractionDiv.style.display = 'none';
+				equalDiv.style.display = 'none';
+			}
+		}
+	);
+	
+
     UpdateFunctions.push(function(){
 		if (diagram) {
 			if (diagram.mouseData.isTouching && !numbersOn) {
@@ -1048,8 +1073,12 @@ function initFormulaDiagram(ID) {
 				if (math) {
 					// Save the original equation
 					for(let n in nodes) {
+						if(precision[n] == undefined) continue;
 						originalLatex[n] = document.querySelector(nodes[n]).innerHTML;
 					}
+
+					resultFractionDiv.style.display = 'inline-block';
+					equalDiv.style.display = 'inline-block';
 				}
 			}
 
@@ -1060,8 +1089,12 @@ function initFormulaDiagram(ID) {
 					if (math) {
 						// Reset back to the original equatio
 						for(let n in nodes) {
+							if(precision[n] == undefined) continue;
 							document.querySelector(nodes[n]).innerHTML = originalLatex[n];
 						}
+
+						resultFractionDiv.style.display = 'none';
+						equalDiv.style.display = 'none';
 
 					}
 				} else {
@@ -1104,9 +1137,15 @@ function initFormulaDiagram(ID) {
 					}
 
 					// Replace symbols with numbers 
-					r['result'] = Math.pow(r['u1'] - r['u2'],2) / (r['s1'] + r['s2']);
+					let num = Math.pow(r['u1'] - r['u2'],2);
+					let denom = (r['s1'] + r['s2']);
+					r['result'] = num / denom;
+
+					numeratorDiv.innerHTML = mathJaxNumber(num.toFixed(1));
+					denominatorDiv.innerHTML = mathJaxNumber(denom.toFixed(1));
 
 					for(let n in nodes) {
+						if(precision[n] == undefined) continue;
 						document.querySelector(nodes[n]).innerHTML = mathJaxNumber(r[n].toFixed(precision[n]));
 					}
 				}
