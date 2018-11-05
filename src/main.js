@@ -1025,15 +1025,15 @@ function initFormulaDiagram(ID) {
 		return `<span class="mjx-char MJXc-TeX-main-R" style="padding-top: 0.4em; padding-bottom: 0.356em; font-size: 20px;">${num}</span>`;
 	}
 	let nodes = {
-		'u1': '#MJXc-Node-58',
-		'u2': '#MJXc-Node-62',
-		's1': '#MJXc-Node-69',
-		's2': '#MJXc-Node-73',
-		'result_fraction' : '#MJXc-Node-77',
-		'numerator' : '#MJXc-Node-78',
-		'denominator' : '#MJXc-Node-79',
-		'equal' :  '#MJXc-Node-76',
-		'result' : '#MJXc-Node-81'
+		'u1': '#MJXc-Node-73',
+		'u2': '#MJXc-Node-77',
+		's1': '#MJXc-Node-84',
+		's2': '#MJXc-Node-88',
+		'result_fraction' : '#MJXc-Node-92',
+		'numerator' : '#MJXc-Node-93',
+		'denominator' : '#MJXc-Node-94',
+		'equal' :  '#MJXc-Node-91',
+		'result' : '#MJXc-Node-96'
 	}
 	let precision = {
 		'u1' : 1,
