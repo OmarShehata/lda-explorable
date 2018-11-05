@@ -98,7 +98,7 @@ MathJax.Hub.Register.StartupHook("End",function () {
 		<div id="projection-4d" class="figure figure-right"></div>
 		<div style="clear:both"></div>
 	</div>
-	<p>You can rotate the projection plane in 4D space with the key pairs W/S, A/D, Q/E, H/L and I/K.</p>
+	<p>You can rotate the projection plane in 4D space with the key pairs W/S, A/D, Q/E, J/L and I/K.</p>
 	<p>At first glance, this looks like an entangled mess. But we know that we might be able to find a projection that reveals the higher dimensional structure to us. I say <i>might</i> because we don't actually know what the original data looks like. We can keep rotating all the angles, and we might find something that looks like it has a good separation, but how do we know when we've found the best one?</p>
 	<p>So far I've been performing LDA behind the scenes to produce the answers. We will now peek behind the curtain and devise the algorithm that will allow us to make such bold claims as <i>this is the best possible separation for this data</i>.</p>
 
@@ -106,7 +106,7 @@ MathJax.Hub.Register.StartupHook("End",function () {
 	<p>This is definitely the most exciting part of mathematics for me. It's the creative process of starting with an open-ended question like &ldquo;How do we look at high dimensional data?&rdquo; and ending up with a tool that allows us to do just that for any dataset. Rather than spoil the punchline, I'll try to guide you a little futher.</p>
 	<p>The first step is to recognize this as an optimization problem. It's hard to think in the abstract, but we can rely on the intuition we've built up so far. Think back to the simple 2D case. We had a closed set of solutions (we knew the angle of the projection line was between 0 and 360 degrees), and we were trying to pick the best one.</p>
 	<p>But what exactly does &ldquo;best&rdquo; mean? Intuitively it means the best separation between classes in the reduced data. So far we've been judging this visually. To solve this as an optimization problem, we need to come up with a metric. This metric should be a number for any given projection that's high when it has good separation, and low otherwise. If we have that, it becomes a standard optimization problem of finding the maximum that we can easily solve with existing techniques.</p>
-	<p>So what sort of formula can we keep come up that would give us a high value for the projection below:</p>
+	<p>So what sort of formula can we come up with that would give us a high value for the projection below:</p>
 	<div id="good-separation" class="figure"></div>
 	<p>Compared to a low value for this projection:</p>
 	<div id="bad-separation" class="figure"></div>
