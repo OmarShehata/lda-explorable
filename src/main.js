@@ -1221,7 +1221,8 @@ function dropHandler(ev) {
   dragLeaveHandler(ev)
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+// This is called from MathJax's startup hook in index.html
+function initAllContent(){
 	initDiagram2D('projection-2d');
 	initDiagram2D('projection-2d-2');
 
@@ -1244,4 +1245,4 @@ document.addEventListener("DOMContentLoaded", function() {
 		}
 	}
 	requestAnimationFrame(update);
-});
+};
