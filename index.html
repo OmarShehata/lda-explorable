@@ -2,6 +2,7 @@
 <html>
 <head>
 	<title>A Geometric Intuition for LDA</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel = "stylesheet" type = "text/css" href = "style.css" />
 	<script src="lib/two.min.js"></script>
     <script src="lib/Tween.js"></script>
@@ -36,9 +37,6 @@ MathJax.Hub.Register.StartupHook("End",function () {
 	<p class="centered-text faded-text subtitle">
 		Omar Shehata &mdash; St. Olaf College &mdash; 2018
 	</p>
-	<!-- <p class="centered-text faded-text">
-		<i>(<span id="minutes_read"></span> min read)</i>
-	</p> -->
 	<!-- 
 	Sources: https://sebastianraschka.com/Articles/2014_python_lda.html#%E2%80%93-bit-by-bit
 	-->
@@ -61,9 +59,9 @@ MathJax.Hub.Register.StartupHook("End",function () {
 	<p>We've succesfully reduced our data, but remember that our goal is to reduce it without losing information. In this case, you can easily tell that there is a pattern to the data when looking at the 2D view. This pattern is completely lost in the 1D view.</p>	
 	<p>Another way to think about this is to consider prediction. Given a new unclassified dot in the 2D view, you can easily guess whether it should be blue or red based on whether it's closer to the upper right or bottom left cluster. This would be much harder if you were given just the 1D view. In other words, our prediction algorithms would perform <i>worse</i> on the reduced data. </p>
 	<p>We've sacrificed accuracy for simplicity, but maybe there's a better way to reduce it. Perhaps we could drop the X axis instead?</p>
-	<p>Click and drag in the 2D graph below to rotate the projection line. </p> 
+	<p>You can try that out by clicking and dragging in the 2D graph below to rotate the projection line. </p> 
 	<div id="projection-2d-2" class="figure" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);" data-initial-line='{"x":1, "y":0.001}'></div>
-	<p>It seems that <span class="projection-link" data-line='{"x":0.001, "y": 1}' data-figure="projection-2d-2">dropping the X axis</span> isn't any better, but these aren't the only two choices. Geometrically, we have an infinite number of lines we can project on! </p>
+	<p>You can <span class="projection-link" data-line='{"x":0.001, "y": 1}' data-figure="projection-2d-2">click here to see that dropping the X axis</span> isn't any better, but these aren't the only two choices. Geometrically, we have an infinite number of lines we can project on! </p>
 	<p>Out of all these possible lines, the line <span class="projection-link" data-figure="projection-2d-2" data-line='{"best":true}'>y = 0</span> provides the best possible separation. This best line is what LDA allows us to find.</p>
 	<p>The reduced data is only 1 dimensional, but it captures the important insight of the higher dimensional view. Think again about prediction. If we're looking at the 1D view, all we have to do to predict whether a new point should be blue or red is just see whether it's on the right or left side. </p>
 	<p>This means that not only would our prediction algorithms perform just as good on the reduced data, it might even perform better! Strangely enough, by removing information, we've actually gained some insight. </p>
@@ -138,19 +136,32 @@ MathJax.Hub.Register.StartupHook("End",function () {
 	<p>Implementing this is just a matter of maximizing the discriminant function we have above, which takes a little bit of calculus. I won't go over the derivation here, but I found <a href="http://courses.cs.tamu.edu/rgutier/csce666_f13/l10.pdf">these slides</a> a useful reference while creating this article.</p>
 	<p>If you want to try performing LDA yourself, this <a href="https://colab.research.google.com/drive/1mGOcLvZd5SLIsqYzYElQtuD0fhZ2DbHl">Jupyter notebook on Colaboratory</a> shows you how to find the best projection for the 2D and 3D examples from this article. You can run it by saving a copy to your account or opening it in &ldquo;playground&rdquo; mode.</p>
 	<p>A final 4D example is also set up at the bottom of the notebook so you can see for yourself the hidden high dimensional structure from the 4D example.</p>
-	<hr>
 	<div id="credit">
 		<p>Thanks to Professor Matt Richey for his amazing and inspiring lectures in the Algorithms for Decision Making class.</p>
 		<p>The source code for this page and all interactive diagrams is available on <a href="https://github.com/OmarShehata/lda-explorable">GitHub</a> and is public domain. I've set it up so it would be really easy to replace the sample data I have and re-run the diagrams with your own data. In fact, you can just drag and drop any .csv file with the right number of columns onto a diagram and it'll use the new data and recompute the best projection. Hopefully you'll find this a useful tool in the classroom. </p>
 	</div>
-</div>
-<script type="text/javascript">
-	// Compute how many minutes to read 
-	var wordCount = document.querySelector(".article").textContent.split(" ").length;
-	var minutes = Math.round(wordCount / 200);
-	//document.querySelector("#minutes_read").innerHTML = String(minutes);
+	<hr>
+	<div id="disqus_thread"></div>
+	<script>
 
-	
-</script>
+	/**
+	*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+	*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+	/*
+	var disqus_config = function () {
+	this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+	this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+	};
+	*/
+	(function() { // DON'T EDIT BELOW THIS LINE
+	var d = document, s = d.createElement('script');
+	s.src = 'https://lda-explorable.disqus.com/embed.js';
+	s.setAttribute('data-timestamp', +new Date());
+	(d.head || d.body).appendChild(s);
+	})();
+	</script>
+	<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+	                            
+</div>
 </body>
 </html>

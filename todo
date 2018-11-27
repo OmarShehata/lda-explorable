@@ -1,3 +1,20 @@
-* Clean example on Colaboratory 
-	* Make it so they can do the 4d example themselves in Python, invite them to go back and find it in JS
-	* Double check scalings in 3D 
+* Xavier's note about the actual number of degrees of freedom 
+* Add "Teacher's Guide" in GitHub readme and link to it at the bottom. It should have:
+	* Gifs of dragging and dropping. To explain what is meant by "Linear"
+	* Note on how to change the equation. 
+
+
+* Find reference for Fisher's Linear Discriminant 
+* Include the ipy notebook in the repo 
+
+* Better ending
+* Shin's feedback
+
+* Emma Dawson's feedback 
+
+
+
+Test:
+* Put a viewport tag
+
+* Make it work on mobile by detecting touch event and not letting it bubble up? 

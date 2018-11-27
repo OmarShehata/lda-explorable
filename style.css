@@ -29,7 +29,7 @@ a:active {
 
 @media (min-width: 768px){
 	.article {
-		width: 640px;
+		max-width: 640px;
 		margin-left: auto;
 		margin-right:auto;
 	}
@@ -111,12 +111,17 @@ blockquote cite:before {
 	content: "\2014 \2009";
 }
 
+#credit {
+	margin-top: 50px;
+}
+
 #credit p {
 	font-size: 15px;
 }
 
 .figure {
 	width: 100%;
+	touch-action: none;
 }
 
 .highlight {
@@ -170,13 +175,17 @@ blockquote cite:before {
 	border:none;
 	font-size:inherit;
 	color:inherit;
-	width: 60px;
+	width: 20px;
     text-align: center;
 }
 
 @media (min-width: 600px){
 	#angles-4d li {		
 		font-size:25px;
+	}
+
+	#angles-4d input {
+		width: 60px;
 	}
 }
 

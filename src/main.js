@@ -295,12 +295,20 @@ function make2DProjectionDiagram(canvas, options){
 		mouseData.mousePos.x = e.clientX; 
 		mouseData.mousePos.y = e.clientY;
 	}
+	function touchMove(e) {
+		if (e.touches.length > 0) {
+			let touch = e.touches[0];
+			mouseData.mousePos.x = touch.clientX; 
+			mouseData.mousePos.y = touch.clientY;
+		}
+	}
 
 	let element = two.renderer.domElement.parentNode;
 	element.addEventListener('mousedown', mouseDown)
 	element.addEventListener('mouseup', mouseUp)
 	element.addEventListener('touchstart', touchStart)
 	element.addEventListener('touchend', touchEnd)
+	element.addEventListener('touchmove', touchMove)
 	element.addEventListener('touchcancel', touchCancel)
 	element.addEventListener('mousemove', mouseMove)
 
@@ -308,6 +316,9 @@ function make2DProjectionDiagram(canvas, options){
 
 	function updateProjection(Vector, normalized, animate){
 		let vector = projectionLine.updateAngle(Vector, normalized)
+		if (vector[0] === 0) {
+			vector[0] = 0.0001;
+		}
 
 		// Update projected points 
 		for(let i=0; i< points2D.length; i++){
