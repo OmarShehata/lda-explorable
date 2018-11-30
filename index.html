@@ -14,7 +14,9 @@
     <script src="lib/threejs/OrbitControls.js"></script>
     <script type="text/x-mathjax-config">
 MathJax.Hub.Config({
-  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
+  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]},
+  displayAlign: "left",
+  CommonHTML: { linebreaks: { automatic: true } }
 });
 MathJax.Hub.Register.StartupHook("End",function () { 
 	initAllContent();
@@ -75,7 +77,7 @@ MathJax.Hub.Register.StartupHook("End",function () {
 		<div style="clear:both"></div>
 	</div>
 	<p>Again, there's an obvious pattern to the data in its original form that's lost in the reduced view. Finding the best projection plane by hand that retains this pattern is a harder problem now because there's three degrees of motion for a plane in 3D compared to one for a line in 2D.</p>
-	<p>For this dataset, this best plane is <span class="projection-link" data-figure="projection-3d" data-line='{"best":true}'>x + y + z = 0</span>. Again, this best projection is what LDA allows us to find.</p>
+	<p>For this dataset, this best plane is <span class="projection-link" data-figure="projection-3d" data-line='{"best":true}'>x + y + z = 0</span>. You can see how this gives us a clean separation in 2D compared to <span class="projection-link" data-line='{"x": 1, "y": 1, "z": 1}' data-figure="projection-3d">an arbitrary plane like this</span>. Again, this best projection is what LDA allows us to find.</p>
 	<p>Now here's the real test. What if we had 4D data that we couldn't even visualize? Below is what it looks projected down to 2D, (you can think of it as first projecting into 3D and then to 2D).</p>
 	<div id="container-4d" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);">
 		<div id="angles-4d" class="figure figure-left">
@@ -115,13 +117,21 @@ MathJax.Hub.Register.StartupHook("End",function () {
 	<hr>
 	<p>If you came up with a solution that took into account both the means of the classes as well as the variance (spread), then give yourself a pat on the back. This is exactly what Ronald Fisher came up with 1936.</p>
 	<p>The formula he came up with is known as Fisher's Linear Discriminant and is defined as:</p>
-	<p>$$\frac{(\mu_1 - \mu_2)^2}{S_1 + S_2}$$</p>
+	<p id="fisher-static">$$\frac{(\mu_1 - \mu_2)^2}{S_1 + S_2}$$</p>
 	<p>Where $\mu_i$ is the mean of class $i$. $S_i$ is the &ldquo;scatter&rdquo; of class $i$ and is defined as $S_i = \sum_{x\in Class_i} (x - \mu_i)^2$. It's a measure of how spread out the data is (by summing up how far each point is from the mean).</p>
 	<p>We want to maximize Fisher's Linear Discriminant, which means we want to favor projections that have greater distance between the means (a big numerator) and aren't very spread out (a small denominator).</p>
 	<p>To see how it works, as always, let's look at a concrete example. Hold your mouse down in the diagram below to see the computed score for any projection. </p>
 	<div id="container-formula" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);">
-		<div id="fisher-formula" class="figure figure-left">
-			<p>$$\frac{(\mu_1 - \mu_2)^2}{S_1 + S_2} = \frac{0.00}{0.00} =  x$$</p>
+		<div class="figure figure-left">
+			<div id="fisher-formula" class="fisher-equation">
+				<p>$$\frac{(\mu_1 - \mu_2)^2}{S_1 + S_2}$$</p>
+			</div>
+			<div id="fisher-formula-computed" class="fisher-equation">
+				<p>$$= \frac{(0.00 - 0.00)^2}{00 + 00}$$</p>
+			</div>
+			<div id="fisher-formula-result" class="fisher-equation">
+				<p>$$= 0$$</p>
+			</div>
 		</div>
 		<div id="projection-fisher" class="figure figure-right"></div>
 		<div style="clear:both"></div>
@@ -153,12 +163,12 @@ MathJax.Hub.Register.StartupHook("End",function () {
 	this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
 	};
 	*/
-	(function() { // DON'T EDIT BELOW THIS LINE
-	var d = document, s = d.createElement('script');
-	s.src = 'https://lda-explorable.disqus.com/embed.js';
-	s.setAttribute('data-timestamp', +new Date());
-	(d.head || d.body).appendChild(s);
-	})();
+	// (function() { // DON'T EDIT BELOW THIS LINE
+	// var d = document, s = d.createElement('script');
+	// s.src = 'https://lda-explorable.disqus.com/embed.js';
+	// s.setAttribute('data-timestamp', +new Date());
+	// (d.head || d.body).appendChild(s);
+	// })();
 	</script>
 	<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 	                            

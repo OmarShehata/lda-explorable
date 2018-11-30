@@ -9,12 +9,3 @@
 
 * Better ending
 * Shin's feedback
-
-* Emma Dawson's feedback 
-
-
-
-Test:
-* Put a viewport tag
-
-* Make it work on mobile by detecting touch event and not letting it bubble up? 

@@ -552,7 +552,8 @@ function initDiagram3D(ID) {
     							
 								link.innerHTML = `(${normal.x.toFixed(2)})x + (${normal.y.toFixed(2)})y + (${normal.z.toFixed(2)})z = 0`;
 							} else {
-								targetQuaternion = plot3d.getQuaternionFromBasis(projectionPlane);
+								targetQuaternion = new THREE.Quaternion(lineToLink.x, lineToLink.y, lineToLink.z, 0);
+								//targetQuaternion = plot3d.getQuaternionFromBasis(projectionPlane);
 							}
 
 							link.onclick = function() {
@@ -995,9 +996,7 @@ function initStaticDiagram(ID, plotType){
 }
 
 function initFormulaDiagram(ID) {
-	let two = initTwojs('#'+ ID, 320, 320)
-
-
+	let two = initTwojs('#'+ ID, 320, 260)
 	let diagram;
 
 	fetch("data/sample-high-variance.csv")
@@ -1023,7 +1022,9 @@ function initFormulaDiagram(ID) {
 
 					diagram.updateLabels('','');
 					diagram.updateData(csvData.data, csvData.classes);
+					diagram.updateProjection([1, 0.001], true, false);
 
+					updateFormula();
 				};
 
 				ProcessHandlers['container-formula'](results)
@@ -1036,15 +1037,11 @@ function initFormulaDiagram(ID) {
 		return `<span class="mjx-char MJXc-TeX-main-R" style="padding-top: 0.4em; padding-bottom: 0.356em; font-size: 20px;">${num}</span>`;
 	}
 	let nodes = {
-		'u1': '#MJXc-Node-73',
-		'u2': '#MJXc-Node-77',
-		's1': '#MJXc-Node-84',
-		's2': '#MJXc-Node-88',
-		'result_fraction' : '#MJXc-Node-92',
-		'numerator' : '#MJXc-Node-93',
-		'denominator' : '#MJXc-Node-94',
-		'equal' :  '#MJXc-Node-91',
-		'result' : '#MJXc-Node-96'
+		'u1': '#MJXc-Node-97',
+		'u2': '#MJXc-Node-99',
+		's1': '#MJXc-Node-104',
+		's2': '#MJXc-Node-106',
+		'result' : '#MJXc-Node-110'
 	}
 	let precision = {
 		'u1' : 1,
@@ -1053,116 +1050,61 @@ function initFormulaDiagram(ID) {
 		's2' : 0,
 		'result' : 3
 	}
-	let originalLatex = {};
 
-	let resultFractionDiv;
-	let equalDiv;
-	let numeratorDiv;
-	let denominatorDiv;
-
-	MathJax.Hub.Startup.signal.Interest(
-		function (message) {
-			if(message == 'End') {
-				resultFractionDiv = document.querySelector(nodes['result_fraction']);
-				equalDiv = document.querySelector(nodes['equal']);
-				numeratorDiv = document.querySelector(nodes['numerator']);
-				denominatorDiv = document.querySelector(nodes['denominator']);
-
-
-				resultFractionDiv.style.display = 'none';
-				equalDiv.style.display = 'none';
+	function updateFormula() {
+		let points2D = diagram.getPoints2D();
+		// Here I assume there's only two classes
+		let r = {};
+		let u1Count = 0;
+		let u2Count = 0;
+		r['u1'] = 0;
+		r['u2']= 0;
+		r['s1'] = 0
+		r['s2'] = 0;
+		// Compute mean 
+		for(let p of points2D) {
+			let pClass = p.class; 
+			
+			if (pClass == 0) {
+				r['u1'] += p.projectedValue;
+				u1Count ++;
+			}
+			if (pClass == 1) {
+				r['u2'] += p.projectedValue;
+				u2Count ++;
 			}
 		}
-	);
-	
+		r['u1'] /= u1Count;
+		r['u2'] /= u2Count;
+
+		// Compute scatter 
+		for(let p of points2D) {
+			let pClass = p.class; 
+			
+			if (pClass == 0) {
+				r['s1'] += Math.pow(p.projectedValue - r['u1'], 2);
+			}
+			if (pClass == 1) {
+				r['s2'] += Math.pow(p.projectedValue - r['u2'], 2);
+			}
+		}
+
+		// Replace symbols with numbers 
+		let num = Math.pow(r['u1'] - r['u2'],2);
+		let denom = (r['s1'] + r['s2']);
+		r['result'] = num / denom;
+
+		for(let n in nodes) {
+			if(precision[n] == undefined) continue;
+			document.querySelector(nodes[n]).innerHTML = mathJaxNumber(r[n].toFixed(precision[n]));
+		}
+	}
 
     UpdateFunctions.push(function(){
 		if (diagram) {
-			if (diagram.mouseData.isTouching && !numbersOn) {
-				numbersOn = true;
-				let math = MathJax.Hub.getAllJax("fisher-formula")[0];
-				if (math) {
-					// Save the original equation
-					for(let n in nodes) {
-						if(precision[n] == undefined) continue;
-						originalLatex[n] = document.querySelector(nodes[n]).innerHTML;
-					}
-
-					resultFractionDiv.style.display = 'inline-block';
-					equalDiv.style.display = 'inline-block';
-				}
+			if (diagram.mouseData.isTouching) {
+				updateFormula();		
 			}
-
-			if(numbersOn) {
-				if(!diagram.mouseData.isTouching) {
-					numbersOn = false;
-					let math = MathJax.Hub.getAllJax("fisher-formula")[0];
-					if (math) {
-						// Reset back to the original equatio
-						for(let n in nodes) {
-							if(precision[n] == undefined) continue;
-							document.querySelector(nodes[n]).innerHTML = originalLatex[n];
-						}
-
-						resultFractionDiv.style.display = 'none';
-						equalDiv.style.display = 'none';
-
-					}
-				} else {
-					
-					let points2D = diagram.getPoints2D();
-					// Here I assume there's only two classes
-					let r = {};
-					let u1Count = 0;
-					let u2Count = 0;
-					r['u1'] = 0;
-					r['u2']= 0;
-					r['s1'] = 0
-					r['s2'] = 0;
-					// Compute mean 
-					for(let p of points2D) {
-						let pClass = p.class; 
-						
-						if (pClass == 0) {
-							r['u1'] += p.projectedValue;
-							u1Count ++;
-						}
-						if (pClass == 1) {
-							r['u2'] += p.projectedValue;
-							u2Count ++;
-						}
-					}
-					r['u1'] /= u1Count;
-					r['u2'] /= u2Count;
-
-					// Compute scatter 
-					for(let p of points2D) {
-						let pClass = p.class; 
-						
-						if (pClass == 0) {
-							r['s1'] += Math.pow(p.projectedValue - r['u1'], 2);
-						}
-						if (pClass == 1) {
-							r['s2'] += Math.pow(p.projectedValue - r['u2'], 2);
-						}
-					}
-
-					// Replace symbols with numbers 
-					let num = Math.pow(r['u1'] - r['u2'],2);
-					let denom = (r['s1'] + r['s2']);
-					r['result'] = num / denom;
-
-					numeratorDiv.innerHTML = mathJaxNumber(num.toFixed(1));
-					denominatorDiv.innerHTML = mathJaxNumber(denom.toFixed(1));
-
-					for(let n in nodes) {
-						if(precision[n] == undefined) continue;
-						document.querySelector(nodes[n]).innerHTML = mathJaxNumber(r[n].toFixed(precision[n]));
-					}
-				}
-			}
-
-			
 		}
 	})
 }

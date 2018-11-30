@@ -122,6 +122,7 @@ blockquote cite:before {
 .figure {
 	width: 100%;
 	touch-action: none;
+	height: 200px;
 }
 
 .highlight {
@@ -199,4 +200,10 @@ blockquote cite:before {
 #container-formula {
 	display: flex;
     align-items: center;
+}
+
+
+
+#fisher-static span {
+	text-align: center!important;
 }
