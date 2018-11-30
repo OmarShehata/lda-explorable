@@ -122,7 +122,6 @@ blockquote cite:before {
 .figure {
 	width: 100%;
 	touch-action: none;
-	height: 200px;
 }
 
 .highlight {
@@ -180,9 +179,17 @@ blockquote cite:before {
     text-align: center;
 }
 
+#angles-4d ul {
+	padding-left: 0px;
+}
+
 @media (min-width: 600px){
 	#angles-4d li {		
 		font-size:25px;
+	}
+
+	#angles-4d ul {
+		padding-left: 40px;
 	}
 
 	#angles-4d input {
