@@ -10,11 +10,11 @@ All interactive diagrams are generated from CSV files in the [data/](https://git
 
 If you're running your own version of this article you can load your data by editing those files. You can also just drag and drop any CSV file onto the diagrams: 
 
-![Drag and drop data in 2D diagrams](drag_and_drop_2d.gif)
+![Drag and drop data in 2D diagrams](media/drag_and_drop_2d.gif)
 
 This will reload the diagram with the new data and recreate any axis labels. It will also recompute relevant links in the text, like the optimal projection line or plane:
 
-![Automatically recompute LDA](lda_recompute.gif)
+![Automatically recompute LDA](media/lda_recompute.gif)
 
 This is a great way to quickly show your audience more specific or relevant examples.
 
@@ -24,11 +24,11 @@ In general, if it's an N-dimensional diagram, the first N columns are read as da
 
 As an example of something you can illustrate, the article never explicitly explains one caveat about LDA: the classes are assumed to be linearly separable. To show this, you can drop a circular dataset and explore how the optimal separation isn't very good at all:
 
-![Best line for circular dataset](circular_data.gif)
+![Best line for circular dataset](media/circular_data.gif)
 
 You can then drop this same dataset in the bottom figure and explore _why_ LDA doesn't work on it:
 
-![Equation computed for circular dataset](equation_circular.gif)
+![Equation computed for circular dataset](media/equation_circular.gif)
 
 The means of the two classes lie perfectly on top of each other, no matter which line we pick!
 
