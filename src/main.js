@@ -255,6 +255,10 @@ function make2DProjectionDiagram(canvas, options){
 	// Projection line 
 	let projectionLine = makeProjectionLine(two, gridMeta);
 	projectionLine.updateAngle(projectionBasis[0], true)
+
+	if (options.isStatic) {
+		projectionLine.stroke = 'rgba(0, 0, 0, 0)';
+	}
 	
 	xText._renderer.elem.style['user-select'] = 'none';
 	yText._renderer.elem.style['user-select'] = 'none';
@@ -364,7 +368,7 @@ function make2DProjectionDiagram(canvas, options){
 	UpdateFunctions.push(function(){
 		two.update();
 
-		if(mouseData.isTouching){
+		if(mouseData.isTouching && !options.isStatic){
 			let newMouse = cPoint.getDOMCoordinates(mouseData.mousePos.x, mouseData.mousePos.y)
 
 			updateProjection([newMouse.x, newMouse.y], null, true)
@@ -400,7 +404,7 @@ function parseData(papaResults){
 	return {header:header, data:data, classes: classes}
 }
 
-function initDiagram2D(ID) {
+function initDiagram2D(ID, isStatic) {
 	let two = initTwojs('#'+ID)
 	let initialLine = JSON.parse(document.querySelector("#" + ID).dataset.initialLine)
 
@@ -409,7 +413,7 @@ function initDiagram2D(ID) {
     .then(res => {
     	Papa.parse(res, {
 			complete: function(results) {
-				let diagram = make2DProjectionDiagram(two);
+				let diagram = make2DProjectionDiagram(two, { isStatic: isStatic });
 
 				ProcessHandlers[ID] = function(results) {
 					let csvData = parseData(results)
@@ -1176,7 +1180,7 @@ function dropHandler(ev) {
 
 // This is called from MathJax's startup hook in index.html
 function initAllContent(){
-	initDiagram2D('projection-2d');
+	initDiagram2D('projection-2d', true);
 	initDiagram2D('projection-2d-2');
 
 	initDiagram3D('projection-3d');

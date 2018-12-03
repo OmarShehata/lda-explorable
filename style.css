@@ -119,6 +119,15 @@ blockquote cite:before {
 	font-size: 15px;
 }
 
+#credit li {
+	font-size: 15px;
+	color: rgba(0, 0, 0, 0.8);
+}
+
+#credit b {
+	color: rgba(0, 0, 0, 0.6);
+}
+
 .figure {
 	width: 100%;
 	touch-action: none;

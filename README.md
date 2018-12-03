@@ -34,7 +34,7 @@ The means of the two classes lie perfectly on top of each other, no matter which
 
 ### Jupyter Notebook
 
-For the readers who want to learn how to actually perform LDA themselves, this [Jupyter notebook](https://colab.research.google.com/drive/1mGOcLvZd5SLIsqYzYElQtuD0fhZ2DbHl#scrollTo=1RWac-X4Knby) hosted on Colaboratory shows you how to do it in 2D and 3D for the datasets in the article. Instructions for doing it on the 4D data are at the bottom.
+For the readers who want to learn how to actually perform LDA themselves, this [Jupyter notebook](https://colab.research.google.com/drive/1mGOcLvZd5SLIsqYzYElQtuD0fhZ2DbHl#scrollTo=1RWac-X4Knby) hosted on Colaboratory shows you how to do it in 2D and 3D for the datasets in the article. Instructions for doing it on the 4D data are at the bottom. You can run it on Colaboratory by saving a copy to your account or opening it in "playground" mode.
 
 I think it's quite rewarding to get the optimal answer programmatically in Python, and then to go back to the article and rotate the dataset to verify that this projection is indeed possible to achieve just by rotating and projecting. This was something I always "knew", because it was told to me but wasn't something I had the chance to see for myself.
 

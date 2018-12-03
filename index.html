@@ -39,13 +39,10 @@ MathJax.Hub.Register.StartupHook("End",function () {
 	<p class="centered-text faded-text subtitle">
 		Omar Shehata &mdash; St. Olaf College &mdash; 2018
 	</p>
-	<!-- 
-	Sources: https://sebastianraschka.com/Articles/2014_python_lda.html#%E2%80%93-bit-by-bit
-	-->
 	<p>Linear Discriminant Analysis, or LDA, is a useful technique in machine learning for <b>classification</b> and <b>dimensionality reduction</b>. It's often used as a preprocessing step since a lot of algorithms perform better on a smaller number of dimensions. </p>
-	<p>The idea that you can take a rich 10 dimensional space and reduce it to 3 dimensions, while keeping most of the information intact, has always seemed a bit like magic to me. I like to think of LDA as a mathematical tool that allows you to peer into spaces that cannot be seen. It's like piercing the veil of the unknowable.</p> 
+	<p>The idea that you can take a rich 10 dimensional space and reduce it to 3 dimensions, while keeping most of the information intact, has always seemed a bit like magic to me. I like to think of LDA as a mathematical tool that allows you to peer into spaces that cannot directly be seen. It's like piercing the veil of the unknowable.</p> 
 	<p>
-		In this article, I'd like to explore the fascinating geometric side of this popular statistical technique. My hope is that this focus on geometric intuition makes these ideas accessible to many more people.  
+		In this article, I'd like to explore the fascinating geometric side of this popular statistical technique. I found it much easier to understand once I got to see it this way, and I hope it will be useful for you as well. 
 	</p>
 	<blockquote>
 		For geometry is the gate of science, and the gate is so low and small that one can only enter it as a child.
@@ -58,15 +55,15 @@ MathJax.Hub.Register.StartupHook("End",function () {
 	<p>Let's see what this looks like. Here is some made up data about houses that's only in 2 dimensions. Blue dots could be houses that were sold and red ones are still looking for a buyer.</p>
 	<div id="projection-2d" class="figure" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);" data-initial-line='{"x":1, "y":0.001}'></div>
 	<p>The graph on the left is the original data, and the line on the right is what it would look like after we drop it 1 dimension by just ignoring the Y axis.</p>
-	<p>We've succesfully reduced our data, but remember that our goal is to reduce it without losing information. In this case, you can easily tell that there is a pattern to the data when looking at the 2D view. This pattern is completely lost in the 1D view.</p>	
+	<p>We've successfully reduced our data, but remember that our goal is to reduce it without losing information. In this case, you can easily tell that there is a pattern to the data when looking at the 2D view. This pattern is completely lost in the 1D view.</p>	
 	<p>Another way to think about this is to consider prediction. Given a new unclassified dot in the 2D view, you can easily guess whether it should be blue or red based on whether it's closer to the upper right or bottom left cluster. This would be much harder if you were given just the 1D view. In other words, our prediction algorithms would perform <i>worse</i> on the reduced data. </p>
 	<p>We've sacrificed accuracy for simplicity, but maybe there's a better way to reduce it. Perhaps we could drop the X axis instead?</p>
 	<p>You can try that out by clicking and dragging in the 2D graph below to rotate the projection line. </p> 
 	<div id="projection-2d-2" class="figure" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);" data-initial-line='{"x":1, "y":0.001}'></div>
-	<p>You can <span class="projection-link" data-line='{"x":0.001, "y": 1}' data-figure="projection-2d-2">click here to see that dropping the X axis</span> isn't any better, but these aren't the only two choices. Geometrically, we have an infinite number of lines we can project on! </p>
+	<p>You can <span class="projection-link" data-line='{"x":0.001, "y": 1}' data-figure="projection-2d-2">click here to see that dropping the X axis</span> isn't much better, but these aren't the only two choices. Geometrically, we have an infinite number of lines we can project on! </p>
 	<p>Out of all these possible lines, the line <span class="projection-link" data-figure="projection-2d-2" data-line='{"best":true}'>y = 0</span> provides the best possible separation. This best line is what LDA allows us to find.</p>
 	<p>The reduced data is only 1 dimensional, but it captures the important insight of the higher dimensional view. Think again about prediction. If we're looking at the 1D view, all we have to do to predict whether a new point should be blue or red is just see whether it's on the right or left side. </p>
-	<p>This means that not only would our prediction algorithms perform just as good on the reduced data, it might even perform better! Strangely enough, by removing information, we've actually gained some insight. </p>
+	<p>This means that not only would our prediction algorithms perform just as good on the reduced data, it would be computationally faster (because there's less data to process)! Strangely enough, by removing information, we've made it easier to gain insight. </p>
 	<h2>Higher Dimensions</h2>
 	<p>To build on this intuition, let's go one dimension up and look at an example that we can still visualize in its unreduced form.</p>
 	<p>Here we've got 3D data, this time with 3 classes, and we want to reduce it to 2D. The diagram below shows one such projection. </p>
@@ -76,7 +73,7 @@ MathJax.Hub.Register.StartupHook("End",function () {
 		<div id="projection-3d-2d" class="figure"></div>
 		<div style="clear:both"></div>
 	</div>
-	<p>Again, there's an obvious pattern to the data in its original form that's lost in the reduced view. Finding the best projection plane by hand that retains this pattern is a harder problem now because there's three degrees of motion for a plane in 3D compared to one for a line in 2D.</p>
+	<p>Again, there's an obvious pattern to the data in its original form that's lost in the reduced view. Finding the best projection plane by hand that retains this pattern is a harder problem now because there's a much greater number of possible projection planes to explore in 3D compared to projection lines in 2D.</p>
 	<p>For this dataset, this best plane is <span class="projection-link" data-figure="projection-3d" data-line='{"best":true}'>x + y + z = 0</span>. You can see how this gives us a clean separation in 2D compared to <span class="projection-link" data-line='{"x": 1, "y": 1, "z": 1}' data-figure="projection-3d">an arbitrary plane like this</span>. Again, this best projection is what LDA allows us to find.</p>
 	<p>Now here's the real test. What if we had 4D data that we couldn't even visualize? Below is what it looks projected down to 2D, (you can think of it as first projecting into 3D and then to 2D).</p>
 	<div id="container-4d" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);">
@@ -98,29 +95,29 @@ MathJax.Hub.Register.StartupHook("End",function () {
 		<div id="projection-4d" class="figure figure-right"></div>
 		<div style="clear:both"></div>
 	</div>
-	<p>You can rotate the projection plane in 4D space with the key pairs W/S, A/D, Q/E, J/L and I/K.</p>
+	<p>You can rotate the projection plane in 4D space with the key pairs W/S, A/D, Q/E, J/L and I/K or if you're on a mobile device by clicking on the numbers and typing in an angle.</p>
 	<p>At first glance, this looks like an entangled mess. But we know that we might be able to find a projection that reveals the higher dimensional structure to us. I say <i>might</i> because we don't actually know what the original data looks like. We can keep rotating all the angles, and we might find something that looks like it has a good separation, but how do we know when we've found the best one?</p>
 	<p>So far I've been performing LDA behind the scenes to produce the answers. We will now peek behind the curtain and devise the algorithm that will allow us to make such bold claims as <i>this is the best possible separation for this data</i>.</p>
 
 	<h2>Devising an Algorithm</h2>
-	<p>This is definitely the most exciting part of mathematics for me. It's the creative process of starting with an open-ended question like &ldquo;How do we look at high dimensional data?&rdquo; and ending up with a tool that allows us to do just that for any dataset. Rather than spoil the punchline, I'll try to guide you a little futher.</p>
+	<p>This is definitely the most exciting part of mathematics in my opinion. It's the creative process of starting with an open-ended question like &ldquo;How do we look at high dimensional data?&rdquo; and ending up with a tool that allows us to do just that for any dataset. Rather than spoil the punchline, I'll try to guide you a little further.</p>
 	<p>The first step is to recognize this as an optimization problem. It's hard to think in the abstract, but we can rely on the intuition we've built up so far. Think back to the simple 2D case. We had a closed set of solutions (we knew the angle of the projection line was between 0 and 360 degrees), and we were trying to pick the best one.</p>
 	<p>But what exactly does &ldquo;best&rdquo; mean? Intuitively it means the best separation between classes in the reduced data. So far we've been judging this visually. To solve this as an optimization problem, we need to come up with a metric. This metric should be a number for any given projection that's high when it has good separation, and low otherwise. If we have that, it becomes a standard optimization problem of finding the maximum that we can easily solve with existing techniques.</p>
 	<p>So what sort of formula can we come up with that would give us a high value for the projection below:</p>
 	<div id="good-separation" class="figure"></div>
 	<p>Compared to a low value for this projection:</p>
 	<div id="bad-separation" class="figure"></div>
-	<p>The simplest example of such a metric could be to simply compute the difference between the mean of each class in the reduced data. This works fairly well as a measure of how good the seperation is in the above cases. But consider the case below, which I've constructed such that the mean of each class is the same as it is in the above dataset.</p>
+	<p>The simplest example of such a metric could be to simply compute the difference between the mean of each class in the reduced data. This works fairly well as a measure of how good the separation is in the above cases. But consider the case below, which I've constructed such that the mean of each class is the same as it is in the above dataset.</p>
 	<div id="high-variance" class="figure"></div>
-	<p>Since the means of the classes in these two datasets are equal, our metric gives them the same number, which implies that this last seperation is as good as the best seperation above, which is clearly not true. A badly designed metric like this would lead our optimization algorithm astray.</p>
-	<p>Can you think of a better way to numerically differentiate a good seperation from a bad one? Pretend like it's the 1930's and no known solution for this exists. Give it some thought, what would you come up with?</p>
+	<p>Since the means of the classes in these two datasets are equal, our metric gives them the same number, which implies that this last separation is as good as the best separation above, which is clearly not true. A badly designed metric like this would lead our optimization algorithm astray.</p>
+	<p>Can you think of a better way to numerically differentiate a good separation from a bad one? Pretend like it's the 1930's and no known solution for this exists. Give it some thought. What would you come up with?</p>
 	<hr>
 	<p>If you came up with a solution that took into account both the means of the classes as well as the variance (spread), then give yourself a pat on the back. This is exactly what Ronald Fisher came up with 1936.</p>
 	<p>The formula he came up with is known as Fisher's Linear Discriminant and is defined as:</p>
 	<p id="fisher-static">$$\frac{(\mu_1 - \mu_2)^2}{S_1 + S_2}$$</p>
 	<p>Where $\mu_i$ is the mean of class $i$. $S_i$ is the &ldquo;scatter&rdquo; of class $i$ and is defined as $S_i = \sum_{x\in Class_i} (x - \mu_i)^2$. It's a measure of how spread out the data is (by summing up how far each point is from the mean).</p>
 	<p>We want to maximize Fisher's Linear Discriminant, which means we want to favor projections that have greater distance between the means (a big numerator) and aren't very spread out (a small denominator).</p>
-	<p>To see how it works, as always, let's look at a concrete example. Hold your mouse down in the diagram below to see the computed score for any projection. </p>
+	<p>To see how it works, as always, let's look at a concrete example. Use your mouse or finger in the diagram below to see the computed score for any projection.</p>
 	<div id="container-formula" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);" ondrop="dropHandler(event);">
 		<div class="figure figure-left">
 			<div id="fisher-formula" class="fisher-equation">
@@ -136,24 +133,26 @@ MathJax.Hub.Register.StartupHook("End",function () {
 		<div id="projection-fisher" class="figure figure-right"></div>
 		<div style="clear:both"></div>
 	</div>
-	<p>Notice how better projections get higher scores, but also how both the mean distance and the scatter values contribute to that score. </p>
-	<p>And that's how LDA works!</p>
 	<!-- How cool would it be to create a framework that allows you to come up with an equation, drag and drop the data in, and see it computed in real time for various examples. That way you can really explore and develop mathematics freely and creatively. -->
+	<p>Can you see that projections that create better separation get higher scores? More importantly, can you see <i>why?</i></p>
+	<p>One thing I discovered by playing around with this diagram is that there's only one way for a projection to have a score of 0, do you see what it is?</p>
+	<p>Notice how nothing in this formula is specific to the 2D case. It's always the difference of the means divided by the sum of the scatter, whether we're working with 2, 4 or 10 dimensions.</p>
 	<p>This particular metric is what Fisher chose, but it's certainly not the only possible one. A different metric could optimize for different results (perhaps you care a little more about minimizing scatter so you multiply the denominator by a large number to give it more weight).</p>
 	<p>I think by understanding that the design of the formulas we use is often a choice with consequences as opposed to just a given absolute, we unlock a power and joy in mathematics.</p>
-	
-	<h2>Implementation Details</h2>
-	<p>Implementing this is just a matter of maximizing the discriminant function we have above, which takes a little bit of calculus. I won't go over the derivation here, but I found <a href="http://courses.cs.tamu.edu/rgutier/csce666_f13/l10.pdf">these slides</a> a useful reference while creating this article.</p>
-	<p>If you want to try performing LDA yourself, this <a href="https://colab.research.google.com/drive/1mGOcLvZd5SLIsqYzYElQtuD0fhZ2DbHl">Jupyter notebook on Colaboratory</a> shows you how to find the best projection for the 2D and 3D examples from this article. You can run it by saving a copy to your account or opening it in &ldquo;playground&rdquo; mode.</p>
-	<p>A final 4D example is also set up at the bottom of the notebook so you can see for yourself the hidden high dimensional structure from the 4D example.</p>
+	<p>And that's how LDA works!</p>
 	<div id="credit">
-		<p>Thanks to Professor Matt Richey for his amazing and inspiring lectures in the Algorithms for Decision Making class.</p>
-		<p>The source code for this page and all interactive diagrams is available on <a href="https://github.com/OmarShehata/lda-explorable">GitHub</a> and is public domain. I've set it up so it would be really easy to replace the sample data I have and re-run the diagrams with your own data. In fact, you can just drag and drop any .csv file with the right number of columns onto a diagram and it'll use the new data and recompute the best projection. Hopefully you'll find this a useful tool in the classroom. </p>
+		<p>Initially created for the <a href="https://explorabl.es/jam/">Explorable Explanations jam</a>. The source code for this page and all interactive diagrams is available on <a href="https://github.com/OmarShehata/lda-explorable">GitHub</a> and is public domain. The <a href="https://github.com/OmarShehata/lda-explorable#a-teachers-guide-to-a-geometric-intuition-for-linear-discriminant-analysis">teacher's guide</a> comes with some tips for using it in the classroom, like how to drag and drop your own data into the article.</p>
+		<p>Special thanks to Professor Matt Richey for his inspiring lectures on LDA in the Algorithms for Decision Making class.</p>
+		<b>Resources & References</b>
+		<ol>
+			<li>The associated <a href="https://github.com/OmarShehata/lda-explorable#jupyter-notebook">Jupyter notebook</a> shows you how to perform LDA yourself in Python using the data from this article.</li>
+			<li>For an example with real world data, <a href="https://juliasilge.com/blog/stack-overflow-pca/">Julia Silge writes about applying this to Stack Overflow data</a> using PCA (very similar to LDA).</li>
+			<li>For the mathematical derivation, extending it to more than 2 classes and actually solving the optimization problem, I found these <a href="http://courses.cs.tamu.edu/rgutier/csce666_f13/l10.pdf">slides</a> and this <a href="https://sebastianraschka.com/Articles/2014_python_lda.html">article</a> very helpful while writing this article.</li>
+		</ol>
 	</div>
 	<hr>
 	<div id="disqus_thread"></div>
 	<script>
-
 	/**
 	*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
 	*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
@@ -163,12 +162,12 @@ MathJax.Hub.Register.StartupHook("End",function () {
 	this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
 	};
 	*/
-	// (function() { // DON'T EDIT BELOW THIS LINE
-	// var d = document, s = d.createElement('script');
-	// s.src = 'https://lda-explorable.disqus.com/embed.js';
-	// s.setAttribute('data-timestamp', +new Date());
-	// (d.head || d.body).appendChild(s);
-	// })();
+	(function() { // DON'T EDIT BELOW THIS LINE
+	var d = document, s = d.createElement('script');
+	s.src = 'https://lda-explorable.disqus.com/embed.js';
+	s.setAttribute('data-timestamp', +new Date());
+	(d.head || d.body).appendChild(s);
+	})();
 	</script>
 	<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 	                            
